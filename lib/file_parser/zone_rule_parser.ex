@@ -1,4 +1,5 @@
 defmodule Tz.FileParser.ZoneRuleParser do
+  @moduledoc false
   # https://data.iana.org/time-zones/tzdb/tz-how-to.html
 
   def parse(file_path) do

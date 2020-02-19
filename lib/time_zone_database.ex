@@ -1,4 +1,6 @@
 defmodule Tz.TimeZoneDatabase do
+  @moduledoc false
+
   @behaviour Calendar.TimeZoneDatabase
 
   alias Tz.FileParser.ZoneRuleParser

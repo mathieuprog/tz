@@ -1,4 +1,6 @@
 defmodule Tz.PeriodsGenerator.PeriodsBuilder do
+  @moduledoc false
+
   require Tz.PeriodsGenerator.Helper
   import Tz.PeriodsGenerator.Helper
 

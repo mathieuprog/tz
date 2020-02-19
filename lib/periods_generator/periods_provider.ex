@@ -1,4 +1,6 @@
 defmodule Tz.PeriodsGenerator.PeriodsProvider do
+  @moduledoc false
+
   require Tz.PeriodsGenerator.Helper
   require Tz.FileParser.ZoneRuleParser
   require Tz.PeriodsGenerator.PeriodsBuilder
