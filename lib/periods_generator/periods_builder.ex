@@ -364,8 +364,10 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
 
     {_, period} = pop_in(period, [:period_before_gap, :from])
     {_, period} = pop_in(period, [:period_before_gap, :to])
+    {_, period} = pop_in(period, [:period_before_gap, :type])
     {_, period} = pop_in(period, [:period_after_gap, :from])
     {_, period} = pop_in(period, [:period_after_gap, :to])
+    {_, period} = pop_in(period, [:period_after_gap, :type])
 
     shrink_and_reverse_periods(tail, [period | shrank_periods])
   end
