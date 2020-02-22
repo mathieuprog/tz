@@ -12,7 +12,7 @@ Add `tz` for Elixir as a dependency in your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:tz, "~> 0.1.0"}
+    {:tz, "~> 0.2.0"}
   ]
 end
 ```
