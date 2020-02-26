@@ -69,18 +69,13 @@ defmodule Tz.TimeZoneDatabase do
         Enum.count(found_periods) == 1 ->
           period = List.first(found_periods)
           case period do
-            %{type: :gap} ->
-              {:gap, {period.period_before_gap, period.from.wall}, {period.period_after_gap, period.to.wall}}
-            _ ->
+            %{zone_abbr: _} ->
               {:ok, period}
+            %{period_before_gap: _} ->
+              {:gap, {period.period_before_gap, period.from.wall}, {period.period_after_gap, period.to.wall}}
           end
         Enum.count(found_periods) == 3 ->
-          case Enum.at(found_periods, 1) do
-            %{type: :overlap} ->
-              {:ambiguous, Enum.at(found_periods, 0), Enum.at(found_periods, 2)}
-            _ ->
-              raise "#{Enum.count(found_periods)} periods found"
-          end
+          {:ambiguous, Enum.at(found_periods, 0), Enum.at(found_periods, 2)}
         true ->
           raise "#{Enum.count(found_periods)} periods found"
       end

@@ -33,7 +33,6 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       end
 
       %{
-        type: :gap,
         period_before_gap: prev_period,
         period_after_gap: period,
         from: prev_period.to,
@@ -46,7 +45,6 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
         end
 
         %{
-          type: :overlap,
           from: period.from,
           to: prev_period.to
         }
@@ -72,7 +70,6 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       end
 
     period = %{
-      type: :regular,
       from: period_from,
       to: convert_date_tuple(zone_line.to, zone_line.std_offset_from_utc_time, offset),
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
@@ -235,7 +232,6 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
     end
 
     period = %{
-      type: :regular,
       from: period_from,
       to: period_to,
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
@@ -300,19 +296,34 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
     |> Map.put(:wall_gregorian_seconds, NaiveDateTime.diff(map_of_dates.wall, ~N[0000-01-01 00:00:00]))
   end
 
+  defp is_period_gap?(%{period_before_gap: _}), do: true
+  defp is_period_gap?(_), do: false
+
   def shrink_and_reverse_periods(periods, shrank_periods \\ [])
 
   def shrink_and_reverse_periods([], shrank_periods), do: shrank_periods
 
   def shrink_and_reverse_periods([period | tail], shrank_periods) do
     {local_offset_from_std_time, period} = pop_in(period, [:local_offset_from_std_time])
-    period = Map.put(period, :std_offset, local_offset_from_std_time)
-
-    {std_offset_from_utc_time, period} = pop_in(period, [:std_offset_from_utc_time])
-    period = Map.put(period, :utc_offset, std_offset_from_utc_time)
 
     period =
-      if period.type == :gap do
+      if local_offset_from_std_time != nil do
+        Map.put(period, :std_offset, local_offset_from_std_time)
+      else
+        period
+      end
+
+    {std_offset_from_utc_time, period} = pop_in(period, [:std_offset_from_utc_time])
+
+    period =
+      if std_offset_from_utc_time != nil do
+        Map.put(period, :utc_offset, std_offset_from_utc_time)
+      else
+        period
+      end
+
+    period =
+      if is_period_gap?(period) do
         {local_offset_from_std_time, period} = pop_in(period, [:period_before_gap, :local_offset_from_std_time])
         period = put_in(period, [:period_before_gap, :std_offset], local_offset_from_std_time)
 
@@ -338,7 +349,7 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       end
 
     period =
-      if period.from != :min && period.type != :gap do
+      if period.from != :min && !is_period_gap?(period) do
         {_, period} = pop_in(period, [:from, :wall])
         period
       else
@@ -355,7 +366,7 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       end
 
     period =
-      if period.to != :max && period.type != :gap do
+      if period.to != :max && !is_period_gap?(period) do
         {_, period} = pop_in(period, [:to, :wall])
         period
       else
@@ -364,10 +375,8 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
 
     {_, period} = pop_in(period, [:period_before_gap, :from])
     {_, period} = pop_in(period, [:period_before_gap, :to])
-    {_, period} = pop_in(period, [:period_before_gap, :type])
     {_, period} = pop_in(period, [:period_after_gap, :from])
     {_, period} = pop_in(period, [:period_after_gap, :to])
-    {_, period} = pop_in(period, [:period_after_gap, :type])
 
     shrink_and_reverse_periods(tail, [period | shrank_periods])
   end
