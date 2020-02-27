@@ -12,7 +12,6 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
 
   @iana_tz_version "tzdata2019c"
   @path Path.join(:code.priv_dir(:tz), @iana_tz_version)
-  @compile_only []
 
   def version(), do: @iana_tz_version
 
@@ -55,7 +54,7 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
       end
     end)
 
-    for {zone_name, zone_lines} <- zone_records, @compile_only == [] || zone_name in @compile_only do
+    for {zone_name, zone_lines} <- zone_records do
       periods =
         PeriodsBuilder.build_periods(zone_lines, rule_records)
         |> PeriodsBuilder.shrink_and_reverse_periods()
