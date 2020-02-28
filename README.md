@@ -43,7 +43,7 @@ or by passing the module name `Tz.TimeZoneDatabase` directly to the functions th
 DateTime.now("America/Sao_Paulo", Tz.TimeZoneDatabase)
 ```
 
-Refer to the [DateTime API](https://hexdocs.pm/elixir/DateTime.html#module-time-zone-database) for more details
+Refer to the [DateTime API](https://hexdocs.pm/elixir/DateTime.html) for more details
 about handling datetimes with time zones.
 
 ## Installation
