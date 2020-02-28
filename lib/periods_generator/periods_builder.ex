@@ -1,7 +1,6 @@
 defmodule Tz.PeriodsGenerator.PeriodsBuilder do
   @moduledoc false
 
-  require Tz.PeriodsGenerator.Helper
   import Tz.PeriodsGenerator.Helper
 
   def build_periods(zone_lines, rule_records, prev_period \\ nil, periods \\ [])
