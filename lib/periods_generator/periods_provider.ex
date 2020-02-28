@@ -10,13 +10,13 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
   alias Tz.FileParser.ZoneRuleParser
 
   @iana_tz_version "tzdata2019c"
-  @path Path.join(:code.priv_dir(:tz), @iana_tz_version)
+  @path_to_tz_data_dir Path.join(:code.priv_dir(:tz), @iana_tz_version)
   @build_periods_with_ongoing_dst_changes_until_year 5 + NaiveDateTime.utc_now().year
 
   def version(), do: @iana_tz_version
 
   for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
-    records = ZoneRuleParser.parse(Path.join(@path, filename))
+    records = ZoneRuleParser.parse(Path.join(@path_to_tz_data_dir, filename))
 
     zone_records =
       Enum.filter(records, & &1.record_type == :zone)
