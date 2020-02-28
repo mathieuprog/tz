@@ -38,9 +38,7 @@ defmodule Tz.PeriodsGenerator.Helper do
     end)
   end
 
-  def denormalize_rules(rules, min_date_until \\ ~N[0000-01-01 00:00:00])
-
-  def denormalize_rules(rules, min_date_until) do
+  def denormalize_rules(rules, build_periods_with_ongoing_dst_changes_until_year \\ 0) do
     ongoing_switch_rules = Enum.filter(rules, & &1.ongoing_switch)
 
     rules =
@@ -49,7 +47,11 @@ defmodule Tz.PeriodsGenerator.Helper do
           rules
         2 ->
           [rule1, rule2] = ongoing_switch_rules
-          last_year = Enum.max([elem(rule1.from, 0), elem(rule2.from, 0), min_date_until], NaiveDateTime).year
+          last_year = Enum.max([
+            build_periods_with_ongoing_dst_changes_until_year,
+            elem(rule1.from, 0).year,
+            elem(rule2.from, 0).year
+          ])
 
           Enum.filter(rules, & !&1.ongoing_switch)
           ++ (rule1.raw

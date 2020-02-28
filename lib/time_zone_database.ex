@@ -102,7 +102,7 @@ defmodule Tz.TimeZoneDatabase do
         rules_by_name
         |> Enum.map(fn {rule_name, rules} -> {rule_name, Helper.denormalize_rules(rules)} end)
         |> Enum.into(%{})
-          end).()
+      end).()
 
     PeriodsBuilder.build_periods([period1.zone_line], rule_records)
     |> PeriodsBuilder.shrink_and_reverse_periods()

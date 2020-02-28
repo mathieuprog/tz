@@ -12,6 +12,7 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
 
   @iana_tz_version "tzdata2019c"
   @path Path.join(:code.priv_dir(:tz), @iana_tz_version)
+  @build_periods_with_ongoing_dst_changes_until_year 5 + NaiveDateTime.utc_now().year
 
   def version(), do: @iana_tz_version
 
@@ -26,24 +27,12 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
         |> Enum.into(%{})
       end).()
 
-    max_zone_to =
-      if zone_records != %{} do
-        Enum.flat_map(zone_records, fn {_zone_name, zone_lines} ->
-          zone_lines
-        end)
-        |> Enum.map(fn
-          %{to: :max} -> ~N[0000-01-01 00:00:00]
-          %{to: {naive_date_time, _}} -> naive_date_time
-        end)
-        |> Enum.max(NaiveDateTime)
-      end
-
     rule_records =
       Enum.filter(records, & &1.record_type == :rule)
       |> Enum.group_by(& &1.name)
       |> (fn rules_by_name ->
         rules_by_name
-        |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, max_zone_to)} end)
+        |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, @build_periods_with_ongoing_dst_changes_until_year)} end)
         |> Enum.into(%{})
       end).()
 
