@@ -1,7 +1,7 @@
 defmodule TimeZoneDatabaseTest do
   use ExUnit.Case
 
-  test "test naive date for time zone" do
+  test "naive date for time zone" do
     naive_date_time = ~N[2018-07-28 12:30:00]
     time_zone = "Europe/Copenhagen"
 
@@ -14,7 +14,7 @@ defmodule TimeZoneDatabaseTest do
     assert datetime.zone_abbr == "CEST"
   end
 
-  test "test time zone link" do
+  test "time zone link" do
     naive_date_time = ~N[2018-07-28 12:30:00]
     time_zone = "Europe/Mariehamn"
 
@@ -25,7 +25,7 @@ defmodule TimeZoneDatabaseTest do
     assert datetime.time_zone == "Europe/Mariehamn"
   end
 
-  test "test naive date is ambiguous date for time zone" do
+  test "naive date is ambiguous date for time zone" do
     naive_date_time = ~N[2018-10-28 02:30:00]
     time_zone = "Europe/Copenhagen"
 
@@ -41,7 +41,7 @@ defmodule TimeZoneDatabaseTest do
     assert second_dt.zone_abbr == "CET"
   end
 
-  test "test naive date date is in gap for time zone" do
+  test "naive date date is in gap for time zone" do
     naive_date_time = ~N[2019-03-31 02:30:00]
     time_zone = "Europe/Copenhagen"
 
@@ -57,7 +57,7 @@ defmodule TimeZoneDatabaseTest do
     assert just_after.zone_abbr == "CEST"
   end
 
-  test "test shift UTC date to other time zone" do
+  test "shift UTC date to other time zone" do
     utc_date_time = ~U[2018-07-16 10:00:00Z]
     time_zone = "America/Los_Angeles"
 
@@ -70,7 +70,7 @@ defmodule TimeZoneDatabaseTest do
     assert pacific_datetime.zone_abbr == "PDT"
   end
 
-  test "test time zone not found" do
+  test "time zone not found" do
     naive_date_time = ~N[2000-01-01 00:00:00]
     time_zone = "bad time zone"
 
