@@ -27,7 +27,7 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
     offset_diff = offset_diff_from_prev_period(zone_line, local_offset, prev_period)
 
     if offset_diff > 0 do
-      if period.from.unix_time != prev_period.to.unix_time do
+      if period.from.utc_gregorian_seconds != prev_period.to.utc_gregorian_seconds do
         raise "logic error"
       end
 
@@ -39,7 +39,7 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       }
     else
       if offset_diff < 0 do
-        if period.from.unix_time != prev_period.to.unix_time do
+        if period.from.utc_gregorian_seconds != prev_period.to.utc_gregorian_seconds do
           raise "logic error"
         end
 
@@ -226,7 +226,7 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
 
     period_to = convert_date_tuple(rule.to, zone_line.std_offset_from_utc_time, rule.local_offset_from_std_time)
 
-    if period_from != :min && period_to != :max && period_from.unix_time == period_to.unix_time do
+    if period_from != :min && period_to != :max && period_from.utc_gregorian_seconds == period_to.utc_gregorian_seconds do
       raise "logic error"
     end
 
@@ -286,12 +286,8 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
       standard: convert_date(date, std_offset_from_utc_time, local_offset_from_std_time, time_modifier, :standard)
     }
 
-    unix_time =
-      DateTime.from_naive!(map_of_dates.utc, "Etc/UTC")
-      |> DateTime.to_unix()
-
     map_of_dates
-    |> Map.put(:unix_time, unix_time)
+    |> Map.put(:utc_gregorian_seconds, NaiveDateTime.diff(map_of_dates.utc, ~N[0000-01-01 00:00:00]))
     |> Map.put(:wall_gregorian_seconds, NaiveDateTime.diff(map_of_dates.wall, ~N[0000-01-01 00:00:00]))
   end
 

@@ -10,10 +10,12 @@ defmodule Tz.TimeZoneDatabase do
 
   @impl true
   def time_zone_period_from_utc_iso_days(iso_days, time_zone) do
-    unix_time = unix_time_from_iso_days(iso_days)
+    naive_datetime = naive_datetime_from_iso_days(iso_days)
+
+    utc_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
     with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
-      found_periods = find_periods_for_timestamp(periods, unix_time, :unix_time)
+      found_periods = find_periods_for_timestamp(periods, utc_gregorian_seconds, :utc_gregorian_seconds)
 
       found_periods =
         found_periods
@@ -23,8 +25,8 @@ defmodule Tz.TimeZoneDatabase do
 
              if(Enum.count(two_first_periods, & &1.to == :max) == 2) do
                two_first_periods
-               |> generate_dynamic_periods(DateTime.from_unix!(unix_time).year)
-               |> find_periods_for_timestamp(unix_time, :unix_time)
+               |> generate_dynamic_periods(naive_datetime.year)
+               |> find_periods_for_timestamp(utc_gregorian_seconds, :utc_gregorian_seconds)
              else
                found_periods
              end
@@ -43,10 +45,10 @@ defmodule Tz.TimeZoneDatabase do
 
   @impl true
   def time_zone_periods_from_wall_datetime(naive_datetime, time_zone) do
-    gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
+    wall_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
     with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
-      found_periods = find_periods_for_timestamp(periods, gregorian_seconds, :wall_gregorian_seconds)
+      found_periods = find_periods_for_timestamp(periods, wall_gregorian_seconds, :wall_gregorian_seconds)
 
       found_periods =
         found_periods
@@ -57,7 +59,7 @@ defmodule Tz.TimeZoneDatabase do
             if(Enum.count(two_first_periods, & &1.to == :max) == 2) do
               two_first_periods
               |> generate_dynamic_periods(naive_datetime.year)
-              |> find_periods_for_timestamp(gregorian_seconds, :wall_gregorian_seconds)
+              |> find_periods_for_timestamp(wall_gregorian_seconds, :wall_gregorian_seconds)
             else
               found_periods
             end
@@ -143,11 +145,5 @@ defmodule Tz.TimeZoneDatabase do
     Calendar.ISO.naive_datetime_from_iso_days(iso_days)
     |> (&apply(NaiveDateTime, :new, Tuple.to_list(&1))).()
     |> elem(1)
-  end
-
-  defp unix_time_from_iso_days(iso_days) do
-    naive_datetime_from_iso_days(iso_days)
-    |> DateTime.from_naive!("Etc/UTC")
-    |> DateTime.to_unix()
   end
 end
