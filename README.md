@@ -17,7 +17,7 @@ The `tz` library relies on the [time zone database](https://data.iana.org/time-z
 The `tz` library is tested against nearly 10 million past dates, which includes most of all possible imaginable
 edge cases.
 
-### Pre-compiled time zone data into maps
+### Pre-compiled time zone data
 
 Time zone periods are deducted from the [IANA time zone data](https://data.iana.org/time-zones/tzdb/). A period is a
 period of time where a certain offset is observed. Example: in Belgium, from 31 March 2019 until 27 October 2019, clock
