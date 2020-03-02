@@ -50,6 +50,7 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
           periods =
             PeriodsBuilder.build_periods(zone_lines, rule_records)
             |> PeriodsBuilder.shrink_and_reverse_periods()
+            |> PeriodsBuilder.group_periods_by_year()
 
           {:periods, zone_name, periods}
         end

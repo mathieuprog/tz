@@ -128,43 +128,7 @@ defmodule Tz.PeriodsGenerator.Helper do
                 apply(unquote(canonical_module), :periods_by_year, [unquote(canonical_zone_name)])
               end
             end
-          {:periods, zone_name, periods} ->
-            periods_by_year =
-              Enum.reduce(periods, %{}, fn
-                %{from: :min, to: :max}, periods_by_year ->
-                  Map.put(periods_by_year, :other, periods)
-                period, periods_by_year ->
-                  from_year =
-                    if period.from != :min do
-                      min(
-                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.utc_gregorian_seconds).year,
-                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.wall_gregorian_seconds).year
-                      )
-                    end
-
-                  to_year =
-                    if period.to != :max do
-                      max(
-                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.utc_gregorian_seconds).year,
-                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.wall_gregorian_seconds).year
-                      )
-                    end
-
-                  periods_by_year =
-                    Enum.reduce(Range.new(from_year || to_year - 1, to_year || from_year + 1), periods_by_year, fn
-                      year, periods_by_year ->
-                        list = Map.get(periods_by_year, year, [])
-                        Map.put(periods_by_year, year, list ++ [period])
-                    end)
-
-                  if period.from == :min || period.to == :max do
-                    list = Map.get(periods_by_year, :other, [])
-                    Map.put(periods_by_year, :other, list ++ [period])
-                  else
-                    periods_by_year
-                  end
-              end)
-
+          {:periods, zone_name, periods_by_year} ->
             quote do
               def periods_by_year(unquote(zone_name)) do
                 {:ok, unquote(Macro.escape(periods_by_year))}
