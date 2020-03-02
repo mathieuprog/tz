@@ -14,7 +14,9 @@ defmodule Tz.TimeZoneDatabase do
 
     utc_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
-    with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
+    with {:ok, periods_by_year} <- PeriodsProvider.periods_by_year(time_zone) do
+      periods = Map.get(periods_by_year, naive_datetime.year, periods_by_year.other)
+
       found_periods = find_periods_for_timestamp(periods, utc_gregorian_seconds, :utc_gregorian_seconds)
 
       found_periods =
@@ -47,7 +49,9 @@ defmodule Tz.TimeZoneDatabase do
   def time_zone_periods_from_wall_datetime(naive_datetime, time_zone) do
     wall_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
-    with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
+    with {:ok, periods_by_year} <- PeriodsProvider.periods_by_year(time_zone) do
+      periods = Map.get(periods_by_year, naive_datetime.year, periods_by_year.other)
+
       found_periods = find_periods_for_timestamp(periods, wall_gregorian_seconds, :wall_gregorian_seconds)
 
       found_periods =

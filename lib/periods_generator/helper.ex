@@ -104,4 +104,82 @@ defmodule Tz.PeriodsGenerator.Helper do
       |> Map.delete(:ongoing_switch)
     end)
   end
+
+  def get_time_zone_area(time_zone) do
+    case String.split(time_zone, "/") do
+      [_] -> nil
+      split_time_zone -> hd(split_time_zone)
+    end
+  end
+
+  def create_area_module({area, periods_and_links}, iana_tz_version) do
+    contents = [
+      quote do
+        @moduledoc(false)
+      end,
+      for period_or_link <- periods_and_links do
+        case period_or_link do
+          {:link, link_zone_name, canonical_zone_name} ->
+            area = get_time_zone_area(canonical_zone_name)
+            canonical_module = :"Elixir.Tz.Periods.#{area}#{iana_tz_version}"
+
+            quote do
+              def periods_by_year(unquote(link_zone_name)) do
+                apply(unquote(canonical_module), :periods_by_year, [unquote(canonical_zone_name)])
+              end
+            end
+          {:periods, zone_name, periods} ->
+            periods_by_year =
+              Enum.reduce(periods, %{}, fn
+                %{from: :min, to: :max}, periods_by_year ->
+                  Map.put(periods_by_year, :other, periods)
+                period, periods_by_year ->
+                  from_year =
+                    if period.from != :min do
+                      min(
+                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.utc_gregorian_seconds).year,
+                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.wall_gregorian_seconds).year
+                      )
+                    end
+
+                  to_year =
+                    if period.to != :max do
+                      max(
+                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.utc_gregorian_seconds).year,
+                        NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.wall_gregorian_seconds).year
+                      )
+                    end
+
+                  periods_by_year =
+                    Enum.reduce(Range.new(from_year || to_year - 1, to_year || from_year + 1), periods_by_year, fn
+                      year, periods_by_year ->
+                        list = Map.get(periods_by_year, year, [])
+                        Map.put(periods_by_year, year, list ++ [period])
+                    end)
+
+                  if period.from == :min || period.to == :max do
+                    list = Map.get(periods_by_year, :other, [])
+                    Map.put(periods_by_year, :other, list ++ [period])
+                  else
+                    periods_by_year
+                  end
+              end)
+
+            quote do
+              def periods_by_year(unquote(zone_name)) do
+                {:ok, unquote(Macro.escape(periods_by_year))}
+              end
+            end
+        end
+      end,
+      quote do
+        def periods_by_year(_) do
+          {:error, :time_zone_not_found}
+        end
+      end
+    ]
+
+    module = :"Elixir.Tz.Periods.#{area}#{iana_tz_version}"
+    Module.create(module, contents, Macro.Env.location(__ENV__))
+  end
 end
