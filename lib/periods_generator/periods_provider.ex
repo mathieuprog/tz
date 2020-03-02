@@ -11,7 +11,7 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
 
   @iana_tz_version "tzdata2019c"
   @path_to_tz_data_dir Path.join(:code.priv_dir(:tz), @iana_tz_version)
-  # @skip_time_zone_periods_before_year Application.get_env(:tz, :skip_time_zone_periods_before_year)
+  @skip_time_zone_periods_before_year Application.get_env(:tz, :skip_time_zone_periods_before_year)
   @build_periods_with_ongoing_dst_changes_until_year Application.get_env(:tz, :build_periods_with_ongoing_dst_changes_until_year, 5 + NaiveDateTime.utc_now().year)
   @default_area_name "Misc"
 
@@ -51,6 +51,7 @@ defmodule Tz.PeriodsGenerator.PeriodsProvider do
             PeriodsBuilder.build_periods(zone_lines, rule_records)
             |> PeriodsBuilder.shrink_and_reverse_periods()
             |> PeriodsBuilder.group_periods_by_year()
+            |> PeriodsBuilder.reject_time_zone_periods_before_year(@skip_time_zone_periods_before_year)
 
           {:periods, zone_name, periods}
         end

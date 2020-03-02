@@ -412,4 +412,13 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
         end
     end)
   end
+
+  def reject_time_zone_periods_before_year(periods_by_year, nil) do
+    periods_by_year
+  end
+
+  def reject_time_zone_periods_before_year(periods_by_year, reject_before_year) do
+    Enum.reject(periods_by_year, fn {year, _} -> year < reject_before_year end)
+    |> Enum.into(%{})
+  end
 end
