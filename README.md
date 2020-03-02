@@ -8,7 +8,7 @@ module can, by default, only operate on datetimes in the UTC time zone. Alternat
 third-party libraries, such as `tz`, to bring in time zone support and deal with datetimes in other time zones than UTC.
 
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
-[IANA](https://www.iana.org). As of version 0.5.0, `tz` uses version _tzdata2019c_ of the IANA time zone database.
+[IANA](https://www.iana.org). As of version 0.6.0, `tz` uses version _tzdata2019c_ of the IANA time zone database.
 
 ## Features
 
@@ -56,7 +56,7 @@ You can decrease **compilation time**, by rejecting time zone periods before a g
 config :tz, reject_time_zone_periods_before_year: 2010
 ```
 
-By default, no periods will be rejected.
+By default, no periods are rejected.
 
 You can decrease **period lookup time** for periods in the future (that have ongoing DST changes), by specifying until
 what year those periods have to be computed:
@@ -65,7 +65,7 @@ what year those periods have to be computed:
 config :tz, build_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
-By default, periods will be computed until 5 years from compilation time.
+By default, periods are computed until 5 years from compilation time.
 
 ## Installation
 
@@ -74,7 +74,7 @@ Add `tz` for Elixir as a dependency in your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:tz, "~> 0.5.0"}
+    {:tz, "~> 0.6.0"}
   ]
 end
 ```
