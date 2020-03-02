@@ -46,6 +46,27 @@ DateTime.now("America/Sao_Paulo", Tz.TimeZoneDatabase)
 Refer to the [DateTime API](https://hexdocs.pm/elixir/DateTime.html) for more details
 about handling datetimes with time zones.
 
+## Performance tweaks
+
+`tz` provides two environment options to tweak performance.
+
+You can decrease **compilation time**, by rejecting time zone periods before a given year:
+
+```
+config :tz, reject_time_zone_periods_before_year: 2010
+```
+
+By default, no periods will be rejected.
+
+You can decrease **period lookup time** for periods in the future (that have ongoing DST changes), by specifying until
+what year those periods have to be computed:
+
+```
+config :tz, build_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
+```
+
+By default, periods will be computed until 5 years from compilation time.
+
 ## Installation
 
 Add `tz` for Elixir as a dependency in your `mix.exs` file:
