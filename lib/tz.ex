@@ -1,5 +1,5 @@
 defmodule Tz do
-  alias Tz.PeriodsGenerator.PeriodsProvider
+  alias Tz.PeriodsProvider
 
   defdelegate version(), to: PeriodsProvider
 end

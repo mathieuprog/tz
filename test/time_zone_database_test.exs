@@ -78,4 +78,8 @@ defmodule TimeZoneDatabaseTest do
 
     assert {:error, :time_zone_not_found} = result
   end
+
+  test "version" do
+    assert Regex.match?(~r/^20[0-9]{2}[a-z]$/, Tz.version())
+  end
 end

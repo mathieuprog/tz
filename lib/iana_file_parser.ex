@@ -1,14 +1,23 @@
-defmodule Tz.FileParser.ZoneRuleParser do
+defmodule Tz.IanaFileParser do
   @moduledoc false
   # https://data.iana.org/time-zones/tzdb/tz-how-to.html
 
+  @build_periods_with_ongoing_dst_changes_until_year Application.get_env(:tz, :build_periods_with_ongoing_dst_changes_until_year, 5 + NaiveDateTime.utc_now().year)
+
   def parse(file_path) do
-    File.stream!(file_path)
-    |> strip_comments()
-    |> strip_empty()
-    |> trim()
-    |> Enum.to_list()
-    |> parse_strings_into_maps()
+    records =
+      File.stream!(file_path)
+      |> strip_comments()
+      |> strip_empty()
+      |> trim()
+      |> Enum.to_list()
+      |> parse_strings_into_maps()
+
+    {
+      denormalized_zone_data(Enum.filter(records, & &1.record_type == :zone)),
+      denormalized_rule_data(Enum.filter(records, & &1.record_type == :rule), @build_periods_with_ongoing_dst_changes_until_year),
+      Enum.filter(records, & &1.record_type == :link)
+    }
   end
 
   defp strip_comments(stream) do
@@ -312,7 +321,7 @@ defmodule Tz.FileParser.ZoneRuleParser do
     {hour, minute, second, time_modifier}
   end
 
-  def offset_string_to_seconds(offset_string) do
+  defp offset_string_to_seconds(offset_string) do
     {is_negative, hours, minutes, seconds} =
       String.split(offset_string, ~r{[:\-]}, include_captures: true, trim: true)
       |> case do
@@ -339,5 +348,103 @@ defmodule Tz.FileParser.ZoneRuleParser do
     total_seconds = hours * 3600 + minutes * 60 + seconds
 
     if(is_negative, do: -1 * total_seconds, else: total_seconds)
+  end
+
+  defp denormalized_zone_data(zone_records) do
+    zone_records
+    |> Enum.group_by(& &1.name)
+    |> (fn zones_by_name ->
+      Enum.map(zones_by_name, fn {zone_name, zone_lines} -> {zone_name, denormalize_zone_lines(zone_lines)} end)
+      |> Enum.into(%{})
+    end).()
+  end
+
+  def denormalized_rule_data(rule_records, build_periods_with_ongoing_dst_changes_until_year \\ 0) do
+    rule_records
+    |> Enum.group_by(& &1.name)
+    |> (fn rules_by_name ->
+      rules_by_name
+      |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, build_periods_with_ongoing_dst_changes_until_year)} end)
+      |> Enum.into(%{})
+    end).()
+  end
+
+  defp denormalize_zone_lines(zone_lines) do
+    zone_lines
+    |> Enum.with_index()
+    |> Enum.map(fn {zone_line, index} ->
+      Map.put(zone_line, :from,
+        cond do
+          index == 0 -> :min
+          true -> Enum.at(zone_lines, index - 1).to
+        end)
+    end)
+  end
+
+  defp denormalize_rules(rules, build_periods_with_ongoing_dst_changes_until_year) do
+    ongoing_switch_rules = Enum.filter(rules, & &1.ongoing_switch)
+
+    rules =
+      case length(ongoing_switch_rules) do
+        0 ->
+          rules
+        2 ->
+          [rule1, rule2] = ongoing_switch_rules
+          last_year = Enum.max([
+            build_periods_with_ongoing_dst_changes_until_year,
+            elem(rule1.from, 0).year,
+            elem(rule2.from, 0).year
+          ])
+
+          Enum.filter(rules, & !&1.ongoing_switch)
+          ++ (rule1.raw
+              |> Map.put(:to_year, "#{last_year}")
+              |> transform_rule())
+          ++ (rule1.raw
+              |> Map.put(:from_year, "#{last_year + 1}")
+              |> Map.put(:to_year, "max")
+              |> transform_rule())
+          ++ (rule2.raw
+              |> Map.put(:to_year, "#{last_year}")
+              |> transform_rule())
+          ++ (rule2.raw
+              |> Map.put(:from_year, "#{last_year + 1}")
+              |> Map.put(:to_year, "max")
+              |> transform_rule())
+        _ ->
+          raise "unexpected number of rules to \"max\", rules: \"#{inspect rules}\""
+      end
+
+    rules =
+      Enum.sort(rules, fn rule1, rule2 ->
+        naive_date_time1 = elem(rule1.from, 0)
+        time_modifier1 = elem(rule1.from, 1)
+        naive_date_time2 = elem(rule2.from, 0)
+        time_modifier2 = elem(rule2.from, 1)
+
+        diff = NaiveDateTime.diff(naive_date_time1, naive_date_time2)
+
+        if (abs(diff) < 86400 && time_modifier1 != time_modifier2) do
+          raise "unexpected case"
+        end
+
+        diff < 0
+      end)
+
+    rules
+    |> Enum.with_index()
+    |> Enum.map(fn {rule, index} ->
+      rule
+      |> Map.put(:to,
+           if rule.ongoing_switch do
+             :max
+           else
+             case Enum.at(rules, index + 1, nil) do
+               nil -> :max
+               next_rule -> next_rule.from
+             end
+           end)
+      |> Map.delete(:ongoing_switch)
+    end)
   end
 end

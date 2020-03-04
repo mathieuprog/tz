@@ -3,10 +3,9 @@ defmodule Tz.TimeZoneDatabase do
 
   @behaviour Calendar.TimeZoneDatabase
 
-  alias Tz.FileParser.ZoneRuleParser
-  alias Tz.PeriodsGenerator.PeriodsBuilder
-  alias Tz.PeriodsGenerator.PeriodsProvider
-  alias Tz.PeriodsGenerator.Helper
+  alias Tz.IanaFileParser
+  alias Tz.PeriodsBuilder
+  alias Tz.PeriodsProvider
 
   @impl true
   def time_zone_period_from_utc_iso_days(iso_days, time_zone) do
@@ -58,22 +57,15 @@ defmodule Tz.TimeZoneDatabase do
       period1.raw_rule
       |> Map.put(:from_year, "#{year - 1}")
       |> Map.put(:to_year, "#{year + 1}")
-      |> ZoneRuleParser.transform_rule()
+      |> IanaFileParser.transform_rule()
 
     rule2 =
       period2.raw_rule
       |> Map.put(:from_year, "#{year - 1}")
       |> Map.put(:to_year, "#{year + 1}")
-      |> ZoneRuleParser.transform_rule()
+      |> IanaFileParser.transform_rule()
 
-    rule_records =
-      (rule1 ++ rule2)
-      |> Enum.group_by(& &1.name)
-      |> (fn rules_by_name ->
-        rules_by_name
-        |> Enum.map(fn {rule_name, rules} -> {rule_name, Helper.denormalize_rules(rules)} end)
-        |> Enum.into(%{})
-      end).()
+    rule_records = IanaFileParser.denormalized_rule_data(rule1 ++ rule2)
 
     PeriodsBuilder.build_periods([period1.zone_line], rule_records)
     |> PeriodsBuilder.shrink_and_reverse_periods()

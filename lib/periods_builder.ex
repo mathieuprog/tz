@@ -1,7 +1,5 @@
-defmodule Tz.PeriodsGenerator.PeriodsBuilder do
+defmodule Tz.PeriodsBuilder do
   @moduledoc false
-
-  import Tz.PeriodsGenerator.Helper
 
   def build_periods(zone_lines, rule_records, prev_period \\ nil, periods \\ [])
 
@@ -420,5 +418,27 @@ defmodule Tz.PeriodsGenerator.PeriodsBuilder do
   def reject_time_zone_periods_before_year(periods_by_year, reject_before_year) do
     Enum.reject(periods_by_year, fn {year, _} -> year < reject_before_year end)
     |> Enum.into(%{})
+  end
+
+  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :wall, :wall), do: naive_date_time
+  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :utc, :utc), do: naive_date_time
+  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :standard, :standard), do: naive_date_time
+  defp convert_date(naive_date_time, standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :utc) do
+    NaiveDateTime.add(naive_date_time, -1 * (standard_offset_from_utc_time + local_offset_from_standard_time), :second)
+  end
+  defp convert_date(naive_date_time, _standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :standard) do
+    NaiveDateTime.add(naive_date_time, -1 * local_offset_from_standard_time, :second)
+  end
+  defp convert_date(naive_date_time, standard_offset_from_utc_time, local_offset_from_standard_time, :utc, :wall) do
+    NaiveDateTime.add(naive_date_time, standard_offset_from_utc_time + local_offset_from_standard_time, :second)
+  end
+  defp convert_date(naive_date_time, standard_offset_from_utc_time, _local_offset_from_standard_time, :utc, :standard) do
+    NaiveDateTime.add(naive_date_time, standard_offset_from_utc_time, :second)
+  end
+  defp convert_date(naive_date_time, standard_offset_from_utc_time, _local_offset_from_standard_time, :standard, :utc) do
+    NaiveDateTime.add(naive_date_time, -1 * standard_offset_from_utc_time, :second)
+  end
+  defp convert_date(naive_date_time, _standard_offset_from_utc_time, local_offset_from_standard_time, :standard, :wall) do
+    NaiveDateTime.add(naive_date_time, local_offset_from_standard_time, :second)
   end
 end

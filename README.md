@@ -26,6 +26,35 @@ went forward by 1 hour; this means that during this period, Belgium observed a t
 The time zone periods are computed and made available in Elixir maps during compilation time, to be consumed by the
 [DateTime](https://hexdocs.pm/elixir/DateTime.html#module-time-zone-database) module.
 
+### Automatic time zone data updates
+
+`tz` can watch for IANA time zone database updates and automatically recompile the time zone periods.
+
+To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supervisor:
+
+```
+{Tz.UpdatePeriodically, []}
+```
+
+If you do not wish to update automatically, but still wish be alerted for new upcoming IANA updates, add
+`Tz.WatchPeriodically` as a child in your supervisor:
+
+```
+{Tz.WatchPeriodically, []}
+```
+
+Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
+
+```
+defp deps do
+  [
+    {:castore, "~> 0.1.5"},
+    {:mint, "~> 1.0"},
+    {:tz, "~> 0.6.0"}
+  ]
+end
+```
+
 ## Usage
 
 To use the `tz` database, either configure it via configuration:
