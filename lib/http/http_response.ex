@@ -1,4 +1,6 @@
 defmodule Tz.HTTP.HTTPResponse do
+  @moduledoc false
+
   defstruct status_code: nil, headers: nil, body: [], complete?: false
 
   def parse([{:status, _, status_code} | mint_messages], %__MODULE__{} = http_response) do

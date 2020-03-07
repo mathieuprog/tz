@@ -1,5 +1,7 @@
 if Code.ensure_loaded?(Mint.HTTP) do
   defmodule Tz.HTTP.HTTPClient do
+    @moduledoc false
+
     alias Mint.HTTP
     alias Tz.HTTP.HTTPResponse
 
