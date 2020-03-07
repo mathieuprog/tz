@@ -377,7 +377,7 @@ defmodule Tz.PeriodsBuilder do
   def group_periods_by_year(periods) do
     Enum.reduce(periods, %{}, fn
       %{from: :min, to: :max}, periods_by_year ->
-        Map.put(periods_by_year, :other, periods)
+        Map.put(periods_by_year, :minmax, periods)
       period, periods_by_year ->
         from_year =
           if period.from != :min do
@@ -403,8 +403,8 @@ defmodule Tz.PeriodsBuilder do
           end)
 
         if period.from == :min || period.to == :max do
-          list = Map.get(periods_by_year, :other, [])
-          Map.put(periods_by_year, :other, list ++ [period])
+          list = Map.get(periods_by_year, :minmax, [])
+          Map.put(periods_by_year, :minmax, list ++ [period])
         else
           periods_by_year
         end

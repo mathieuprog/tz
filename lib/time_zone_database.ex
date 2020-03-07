@@ -14,7 +14,7 @@ defmodule Tz.TimeZoneDatabase do
       utc_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
       found_periods =
-        Map.get(periods_by_year, naive_datetime.year, periods_by_year.other)
+        Map.get(periods_by_year, naive_datetime.year, periods_by_year.minmax)
         |> find_periods_for_timestamp(utc_gregorian_seconds, :utc_gregorian_seconds)
 
       case Enum.count(found_periods) do
@@ -32,7 +32,7 @@ defmodule Tz.TimeZoneDatabase do
       wall_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
 
       found_periods =
-        Map.get(periods_by_year, naive_datetime.year, periods_by_year.other)
+        Map.get(periods_by_year, naive_datetime.year, periods_by_year.minmax)
         |> find_periods_for_timestamp(wall_gregorian_seconds, :wall_gregorian_seconds)
 
       case Enum.count(found_periods) do
