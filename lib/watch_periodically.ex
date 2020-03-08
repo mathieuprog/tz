@@ -4,9 +4,8 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
     require Logger
 
+    alias Tz.Updater
     alias Tz.PeriodsProvider
-    alias Tz.HTTP.HTTPClient
-    alias Tz.HTTP.HTTPResponse
 
     def start_link(_) do
       GenServer.start_link(__MODULE__, %{})
@@ -20,7 +19,7 @@ if Code.ensure_loaded?(Mint.HTTP) do
     def handle_info(:work, state) do
       Logger.debug("Tz is checking for IANA time zone database updates")
 
-      case fetch_iana_tz_version() do
+      case Updater.fetch_iana_tz_version() do
         {:ok, latest_version} ->
           if latest_version != PeriodsProvider.version() do
             link = "https://data.iana.org/time-zones/releases/tzdata#{latest_version}.tar.gz"
@@ -36,15 +35,6 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
     defp schedule_work() do
       Process.send_after(self(), :work, 24 * 60 * 60 * 1000) # In 24 hours
-    end
-
-    defp fetch_iana_tz_version() do
-      case HTTPClient.request("GET", "/time-zones/tzdb/version", hostname: "data.iana.org") do
-        %HTTPResponse{body: body, status_code: 200} ->
-          {:ok, body |> List.first() |> String.trim()}
-        _ ->
-          :error
-      end
     end
   end
 end
