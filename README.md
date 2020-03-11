@@ -91,7 +91,7 @@ You can decrease **period lookup time** for periods in the future (that have ong
 what year those periods have to be computed:
 
 ```
-config :tz, build_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
+config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
 By default, periods are computed until 5 years from compilation time.
