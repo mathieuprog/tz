@@ -36,12 +36,14 @@ To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supe
 {Tz.UpdatePeriodically, []}
 ```
 
-If you do not wish to update automatically, but still wish be alerted for new upcoming IANA updates, add
+If you do not wish to update automatically, but still wish to be alerted for new upcoming IANA updates, add
 `Tz.WatchPeriodically` as a child in your supervisor:
 
 ```
 {Tz.WatchPeriodically, []}
 ```
+
+This will simply log to your server when a new time zone database is available.
 
 Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
 
