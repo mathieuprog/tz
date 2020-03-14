@@ -89,14 +89,20 @@ config :tz, reject_time_zone_periods_before_year: 2010
 
 By default, no periods are rejected.
 
-You can decrease **period lookup time** for periods in the future (that have ongoing DST changes), by specifying until
-what year those periods have to be computed:
+For time zones that have ongoing DST changes, period lookups for dates far in the future will result in periods being
+dynamically computed based on the IANA data. For example, what is the period for 20 March 2040 for New York (let's
+assume that the last rules for New York still mention an ongoing DST change as you read this)? We can't compile periods
+indefinitely in the future; by default, such periods are computed until 5 years from compilation time. Dynamic period
+computations is a slow operation.
+
+You can decrease **period lookup time** for such periods lookups, by specifying until what year those periods have to be
+computed:
 
 ```
 config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
-By default, periods are computed until 5 years from compilation time.
+Note that increasing the year will also slightly increase compilation time, as it will generate more periods to compile.
 
 ## Installation
 
