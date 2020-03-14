@@ -54,6 +54,8 @@ defmodule Tz.Compiler do
         {:periods, zone_name, _} -> get_time_zone_area(zone_name) || @default_area_name
       end)
 
+    # TODO: `:erlang.get(:elixir_compiler_pid)` is a private API.
+    # Replace by `Code.can_await_modules_compilation?` from Elixir v1.11
     fn_async =
       case :erlang.get(:elixir_compiler_pid) do
         :undefined -> &Task.async/1
