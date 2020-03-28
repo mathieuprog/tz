@@ -193,12 +193,19 @@ defmodule Tz.PeriodsBuilder do
     {rule_from, rule_from_modifier} = first_rule.from
 
     if NaiveDateTime.compare(prev_period.to[rule_from_modifier], rule_from) == :lt do
+      letter =
+        # find first rule with local offset to 0
+        case Enum.find(rules, & &1.local_offset_from_std_time == 0) do
+          %{letter: letter} -> letter
+          _ -> ""
+        end
+
       rule = %{
         record_type: :rule,
         from: zone_line.from,
         name: first_rule.name,
         local_offset_from_std_time: 0,
-        letter: "",
+        letter: letter,
         to: first_rule.from
       }
       [rule | rules]
