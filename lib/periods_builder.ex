@@ -71,7 +71,7 @@ defmodule Tz.PeriodsBuilder do
       to: convert_date_tuple(zone_line.to, zone_line.std_offset_from_utc_time, offset),
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
       local_offset_from_std_time: offset,
-      zone_abbr: zone_line.format_time_zone_abbr
+      zone_abbr: zone_abbr(zone_line, offset)
     }
 
     maybe_gap_or_overlap_period = maybe_build_gap_or_overlap_period(zone_line, offset, prev_period, period)
@@ -240,7 +240,7 @@ defmodule Tz.PeriodsBuilder do
       to: period_to,
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
       local_offset_from_std_time: rule.local_offset_from_std_time,
-      zone_abbr: zone_abbr(zone_line, rule)
+      zone_abbr: zone_abbr(zone_line, rule.local_offset_from_std_time, rule.letter)
     }
 
     period =
@@ -261,15 +261,15 @@ defmodule Tz.PeriodsBuilder do
     do_build_periods_for_zone_line(zone_line, rest_rules, period, periods)
   end
 
-  defp zone_abbr(zone_line, rule) do
-    is_standard_time = rule.local_offset_from_std_time == 0
+  defp zone_abbr(zone_line, offset, letter \\ "") do
+    is_standard_time = offset == 0
 
     cond do
       String.contains?(zone_line.format_time_zone_abbr, "/") ->
         [zone_abbr_std_time, zone_abbr_dst_time] = String.split(zone_line.format_time_zone_abbr, "/")
         if(is_standard_time, do: zone_abbr_std_time, else: zone_abbr_dst_time)
       String.contains?(zone_line.format_time_zone_abbr, "%s") ->
-        String.replace(zone_line.format_time_zone_abbr, "%s", rule.letter)
+        String.replace(zone_line.format_time_zone_abbr, "%s", letter)
       true ->
         zone_line.format_time_zone_abbr
     end
