@@ -3,14 +3,14 @@ defmodule Tz.PeriodsBuilder do
 
   def build_periods(zone_lines, rule_records, prev_period \\ nil, periods \\ [])
 
-  def build_periods([], _rule_records, _prev_period, periods), do: periods
+  def build_periods([], _rule_records, _prev_period, periods), do: Enum.reverse(periods)
 
   def build_periods([zone_line | rest_zone_lines], rule_records, prev_period, periods) do
     rules = Map.get(rule_records, zone_line.rules, zone_line.rules)
 
     new_periods = build_periods_for_zone_line(zone_line, rules, prev_period)
 
-    build_periods(rest_zone_lines, rule_records, List.last(new_periods), periods ++ new_periods)
+    build_periods(rest_zone_lines, rule_records, hd(new_periods), new_periods ++ periods)
   end
 
   defp offset_diff_from_prev_period(_zone_line, _local_offset, nil), do: 0
@@ -20,8 +20,8 @@ defmodule Tz.PeriodsBuilder do
     total_offset - prev_total_offset
   end
 
-  defp maybe_build_gap_or_overlap_period(_zone_line, _local_offset, %{to: :max}, _period), do: nil
-  defp maybe_build_gap_or_overlap_period(zone_line, local_offset, prev_period, period) do
+  defp maybe_build_gap_period(_zone_line, _local_offset, %{to: :max}, _period), do: nil
+  defp maybe_build_gap_period(zone_line, local_offset, prev_period, period) do
     offset_diff = offset_diff_from_prev_period(zone_line, local_offset, prev_period)
 
     if offset_diff > 0 do
@@ -40,11 +40,6 @@ defmodule Tz.PeriodsBuilder do
         if period.from.utc_gregorian_seconds != prev_period.to.utc_gregorian_seconds do
           raise "logic error"
         end
-
-        %{
-          from: period.from,
-          to: prev_period.to
-        }
       end
     end
   end
@@ -74,9 +69,9 @@ defmodule Tz.PeriodsBuilder do
       zone_abbr: zone_abbr(zone_line, offset)
     }
 
-    maybe_gap_or_overlap_period = maybe_build_gap_or_overlap_period(zone_line, offset, prev_period, period)
+    maybe_build_gap_period = maybe_build_gap_period(zone_line, offset, prev_period, period)
 
-    if maybe_gap_or_overlap_period, do: [maybe_gap_or_overlap_period, period], else: [period]
+    if maybe_build_gap_period, do: [period, maybe_build_gap_period], else: [period]
   end
 
   defp build_periods_for_zone_line(zone_line, rules, prev_period) when is_list(rules) do
@@ -102,7 +97,7 @@ defmodule Tz.PeriodsBuilder do
   end
 
   defp filter_rules_for_zone_line(zone_line, rules, prev_period, prev_local_offset_from_std_time, filtered_rules \\ [])
-  defp filter_rules_for_zone_line(_zone_line, [], _, _, filtered_rules), do: filtered_rules
+  defp filter_rules_for_zone_line(_zone_line, [], _, _, filtered_rules), do: Enum.reverse(filtered_rules)
   defp filter_rules_for_zone_line(zone_line, [rule | rest_rules], prev_period, prev_local_offset_from_std_time, filtered_rules) do
     is_rule_included =
       cond do
@@ -131,7 +126,7 @@ defmodule Tz.PeriodsBuilder do
       end
 
     if is_rule_included do
-      filter_rules_for_zone_line(zone_line, rest_rules, prev_period, rule.local_offset_from_std_time, filtered_rules ++ [rule])
+      filter_rules_for_zone_line(zone_line, rest_rules, prev_period, rule.local_offset_from_std_time, [rule | filtered_rules])
     else
       filter_rules_for_zone_line(zone_line, rest_rules, prev_period, prev_local_offset_from_std_time, filtered_rules)
     end
@@ -151,8 +146,8 @@ defmodule Tz.PeriodsBuilder do
     last_rule = List.last(rules)
 
     if rule_ends_after_zone_line_range?(zone_line, last_rule) do
-      rules_without_last = Enum.reverse(rules) |> tl() |> Enum.reverse()
-      rules_without_last ++ [%{last_rule | to: zone_line.to}]
+      [%{last_rule | to: zone_line.to} | (Enum.reverse(rules) |> tl())]
+      |> Enum.reverse()
     else
       rules
     end
@@ -246,17 +241,17 @@ defmodule Tz.PeriodsBuilder do
     period =
       if period_to == :max do
         period
-        |> Map.put(:raw_rule, rule.raw)
+        |> Map.put(:rule, rule)
         |> Map.put(:zone_line, zone_line)
       else
         period
       end
 
-    maybe_gap_or_overlap_period = maybe_build_gap_or_overlap_period(zone_line, rule.local_offset_from_std_time, prev_period, period)
+    maybe_build_gap_period = maybe_build_gap_period(zone_line, rule.local_offset_from_std_time, prev_period, period)
 
-    periods = if maybe_gap_or_overlap_period, do: periods ++ [maybe_gap_or_overlap_period], else: periods
+    periods = if maybe_build_gap_period, do: [maybe_build_gap_period | periods], else: periods
 
-    periods = periods ++ [period]
+    periods = [period | periods]
 
     do_build_periods_for_zone_line(zone_line, rest_rules, period, periods)
   end

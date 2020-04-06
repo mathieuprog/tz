@@ -146,7 +146,8 @@ defmodule Tz.IanaFileParser do
       end
 
     for year <- Range.new(from_year, to_year) do
-      {year, month, day} = parse_day_string(year, month, rule.day)
+      parsed_day = parse_day_string(rule.day)
+      {year, month, day} = parsed_day_to_date(year, month, parsed_day)
 
       naive_date_time = new_naive_date_time(year, month, day, hour, minute, second)
 
@@ -159,9 +160,36 @@ defmodule Tz.IanaFileParser do
         name: rule.name,
         local_offset_from_std_time: local_offset,
         letter: if(rule.letter == "-", do: "", else: rule.letter),
-        raw: rule
+        __datetime_data: %{
+          date: {year, month, parsed_day},
+          time: {hour, minute, second, time_modifier}
+        }
       }
     end
+  end
+
+  def change_rule_year(rule, year, ongoing_switch \\ false)
+
+  def change_rule_year(%{to: _} = rule, year, ongoing_switch) do
+    rule
+    |> Map.put(:ongoing_switch, ongoing_switch)
+    |> Map.delete(:to)
+    |> change_rule_year(year, ongoing_switch)
+  end
+
+  def change_rule_year(%{} = rule, year, ongoing_switch) do
+    %{
+      date: {_, month, parsed_day},
+      time: {hour, minute, second, time_modifier}
+    } = rule.__datetime_data
+
+    {year, month, day} = parsed_day_to_date(year, month, parsed_day)
+    naive_date_time = new_naive_date_time(year, month, day, hour, minute, second)
+
+    %{rule |
+      from: {naive_date_time, time_modifier},
+      ongoing_switch: ongoing_switch
+    }
   end
 
   defp new_naive_date_time(year, month, day, 24, minute, second) do
@@ -179,27 +207,40 @@ defmodule Tz.IanaFileParser do
     naive_date_time
   end
 
-  defp parse_day_string(year, month, day_string) do
+  defp parse_day_string(day_string) do
     cond do
       String.contains?(day_string, "last") ->
         "last" <> day_of_week_string = day_string
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
-        day = day_at_last_given_day_of_week_of_month(year, month, day_of_week)
-        {year, month, day}
+        {:last_dow, day_of_week}
       String.contains?(day_string, "<=") ->
         [day_of_week_string, on_or_before_day] = String.split(day_string, "<=", trim: true)
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
         on_or_before_day = String.to_integer(on_or_before_day)
-        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_before_day, on_or_before_day)
+        {:dow_equal_or_before_day, day_of_week, on_or_before_day}
       String.contains?(day_string, ">=") ->
         [day_of_week_string, on_or_after_day] = String.split(day_string, ">=", trim: true)
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
         on_or_after_day = String.to_integer(on_or_after_day)
-        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_after_day, on_or_after_day)
+        {:dow_equal_or_after_day, day_of_week, on_or_after_day}
       String.match?(day_string, ~r/[0-9]+/) ->
-        {year, month, String.to_integer(day_string)}
+        {:day, String.to_integer(day_string)}
       true ->
         raise "could not parse day from rule (day to parse is \"#{day_string}\")"
+    end
+  end
+
+  defp parsed_day_to_date(year, month, parsed_day) do
+    case parsed_day do
+      {:last_dow, day_of_week} ->
+        day = day_at_last_given_day_of_week_of_month(year, month, day_of_week)
+        {year, month, day}
+      {:dow_equal_or_before_day, day_of_week, on_or_before_day} ->
+        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_before_day, on_or_before_day)
+      {:dow_equal_or_after_day, day_of_week, on_or_after_day} ->
+        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_after_day, on_or_after_day)
+      {:day, day} ->
+        {year, month, day}
     end
   end
 
@@ -211,14 +252,16 @@ defmodule Tz.IanaFileParser do
         [year, month, day, time] ->
           year = String.to_integer(year)
           month = month_string_to_integer(month)
-          {year, month, day} = parse_day_string(year, month, day)
+          parsed_day = parse_day_string(day)
+          {year, month, day} = parsed_day_to_date(year, month, parsed_day)
 
           {hour, minute, second, time_modifier} = parse_time_string(time)
           {year, month, day, hour, minute, second, time_modifier}
         [year, month, day] ->
           year = String.to_integer(year)
           month = month_string_to_integer(month)
-          {year, month, day} = parse_day_string(year, month, day)
+          parsed_day = parse_day_string(day)
+          {year, month, day} = parsed_day_to_date(year, month, parsed_day)
 
           {year, month, day, 0, 0, 0, :wall}
         [year, month] ->
@@ -385,11 +428,10 @@ defmodule Tz.IanaFileParser do
     ongoing_switch_rules = Enum.filter(rules, & &1.ongoing_switch)
 
     rules =
-      case length(ongoing_switch_rules) do
-        0 ->
+      case ongoing_switch_rules do
+        [] ->
           rules
-        2 ->
-          [rule1, rule2] = ongoing_switch_rules
+        [rule1, rule2] ->
           last_year = Enum.max([
             build_periods_with_ongoing_dst_changes_until_year,
             elem(rule1.from, 0).year,
@@ -397,20 +439,14 @@ defmodule Tz.IanaFileParser do
           ])
 
           Enum.filter(rules, & !&1.ongoing_switch)
-          ++ (rule1.raw
-              |> Map.put(:to_year, "#{last_year}")
-              |> transform_rule())
-          ++ (rule1.raw
-              |> Map.put(:from_year, "#{last_year + 1}")
-              |> Map.put(:to_year, "max")
-              |> transform_rule())
-          ++ (rule2.raw
-              |> Map.put(:to_year, "#{last_year}")
-              |> transform_rule())
-          ++ (rule2.raw
-              |> Map.put(:from_year, "#{last_year + 1}")
-              |> Map.put(:to_year, "max")
-              |> transform_rule())
+          ++ for year <- Range.new(elem(rule1.from, 0).year, last_year) do
+               change_rule_year(rule1, year)
+             end
+          ++ [change_rule_year(rule1, last_year + 1, true)]
+          ++ for year <- Range.new(elem(rule2.from, 0).year, last_year) do
+               change_rule_year(rule2, year)
+             end
+          ++ [change_rule_year(rule2, last_year + 1, true)]
         _ ->
           raise "unexpected number of rules to \"max\", rules: \"#{inspect rules}\""
       end

@@ -79,6 +79,15 @@ defmodule TimeZoneDatabaseTest do
     assert {:error, :time_zone_not_found} = result
   end
 
+  test "far future date" do
+    naive_date_time = ~N[2043-12-18 12:30:00]
+    time_zone = "Europe/Brussels"
+
+    result = DateTime.from_naive(naive_date_time, time_zone, Tz.TimeZoneDatabase)
+
+    assert {:ok, datetime} = result
+  end
+
   test "version" do
     assert Regex.match?(~r/^20[0-9]{2}[a-z]$/, Tz.version())
   end
