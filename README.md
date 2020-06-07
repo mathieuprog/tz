@@ -8,7 +8,7 @@ module can, by default, only operate on datetimes in the UTC time zone. Alternat
 third-party libraries, such as `tz`, to bring in time zone support and deal with datetimes in other time zones than UTC.
 
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
-[IANA](https://www.iana.org). As of version 0.10.0, `tz` uses version _tzdata2019c_ of the IANA time zone database.
+[IANA](https://www.iana.org). As of version 0.10.0, `tz` uses version _tzdata2020a_ of the IANA time zone database.
 
 ## Features
 
