@@ -63,8 +63,8 @@ defmodule Tz.TimeZoneDatabase do
       # the utc timestamp + the offset (= this transition's wall time)
       if secs >= utc_secs + prev_utc_off + prev_std_off do
         {:gap,
-          {period_to_map(prev_period), utc_secs + prev_utc_off + prev_std_off |> gregorian_seconds_to_naive_datetime},
-          {period_to_map(period), utc_secs + utc_off + std_off |> gregorian_seconds_to_naive_datetime}}
+          {period_to_map(prev_period), gregorian_seconds_to_naive_datetime(utc_secs + prev_utc_off + prev_std_off)},
+          {period_to_map(period), gregorian_seconds_to_naive_datetime(utc_secs + utc_off + std_off)}}
       else
         # the given timestamp occurs before this transition and there is no gap with the previous period,
         # so continue iterating
