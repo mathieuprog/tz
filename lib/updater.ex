@@ -71,7 +71,26 @@ if Code.ensure_loaded?(Mint.HTTP) do
       tmp_archive_path = Path.join(:code.priv_dir(:tz), "tzdata#{version}.tar.gz")
       tz_data_dir = "tzdata#{version}"
       :ok = File.write!(tmp_archive_path, content)
-      :ok = :erl_tar.extract(tmp_archive_path, [:compressed, {:cwd, Path.join(:code.priv_dir(:tz), tz_data_dir)}])
+
+      files_to_extract = [
+        'africa',
+        'antarctica',
+        'asia',
+        'australasia',
+        'backward',
+        'etcetera',
+        'europe',
+        'northamerica',
+        'southamerica',
+        'iso3166.tab',
+        'zone1970.tab'
+      ]
+      :ok = :erl_tar.extract(tmp_archive_path, [
+        :compressed,
+        {:cwd, Path.join(:code.priv_dir(:tz), tz_data_dir)},
+        {:files, files_to_extract}
+      ])
+
       :ok = File.rm!(tmp_archive_path)
     end
 

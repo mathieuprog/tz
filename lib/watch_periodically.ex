@@ -1,22 +1,11 @@
 if Code.ensure_loaded?(Mint.HTTP) do
   defmodule Tz.WatchPeriodically do
     use GenServer
-
     require Logger
-
     alias Tz.Updater
     alias Tz.PeriodsProvider
 
-    def start_link(_) do
-      GenServer.start_link(__MODULE__, %{})
-    end
-
-    def init(state) do
-      schedule_work()
-      {:ok, state}
-    end
-
-    def handle_info(:work, state) do
+    defp watch() do
       Logger.debug("Tz is checking for IANA time zone database updates")
 
       case Updater.fetch_iana_tz_version() do
@@ -28,6 +17,20 @@ if Code.ensure_loaded?(Mint.HTTP) do
         :error ->
           Logger.error("Tz failed to read the latest version of the IANA time zone database")
       end
+    end
+
+    def start_link(_) do
+      GenServer.start_link(__MODULE__, %{})
+    end
+
+    def init(state) do
+      watch()
+
+      {:ok, state}
+    end
+
+    def handle_info(:work, state) do
+      watch()
 
       schedule_work()
       {:noreply, state}

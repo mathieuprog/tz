@@ -13,10 +13,16 @@ defmodule Tz.IanaFileParser do
       |> Enum.to_list()
       |> parse_strings_into_maps()
 
+    zones = Enum.filter(records, & &1.record_type == :zone)
+    rules = Enum.filter(records, & &1.record_type == :rule)
+    links = Enum.filter(records, & &1.record_type == :link)
+
     {
-      denormalized_zone_data(Enum.filter(records, & &1.record_type == :zone)),
-      denormalized_rule_data(Enum.filter(records, & &1.record_type == :rule), @build_periods_with_ongoing_dst_changes_until_year),
-      Enum.filter(records, & &1.record_type == :link)
+      denormalized_zone_data(zones),
+      denormalized_rule_data(rules, @build_periods_with_ongoing_dst_changes_until_year),
+      links,
+      Enum.filter(rules, & &1.ongoing_switch)
+      |> Enum.group_by(& &1.name)
     }
   end
 

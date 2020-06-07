@@ -3,95 +3,133 @@ defmodule Tz.TimeZoneDatabase do
 
   @behaviour Calendar.TimeZoneDatabase
 
-  alias Tz.IanaFileParser
-  alias Tz.PeriodsBuilder
   alias Tz.PeriodsProvider
 
+  @compile {:inline, period_to_map: 1}
+
   @impl true
+  def time_zone_period_from_utc_iso_days(_, "Etc/UTC"),
+      do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
+
   def time_zone_period_from_utc_iso_days(iso_days, time_zone) do
-    with {:ok, periods_by_year} <- PeriodsProvider.periods_by_year(time_zone) do
-      naive_datetime = naive_datetime_from_iso_days(iso_days)
-      utc_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
-
-      found_periods =
-        Map.get(periods_by_year, naive_datetime.year, periods_by_year.minmax)
-        |> find_periods_for_timestamp(utc_gregorian_seconds, :utc_gregorian_seconds)
-
-      case found_periods do
-        [period] ->
-          {:ok, period}
-        _ ->
-          raise "#{Enum.count(found_periods)} periods found"
-      end
+    with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
+      iso_days_to_gregorian_seconds(iso_days)
+      |> find_period_for_secs(periods, :utc)
     end
   end
 
   @impl true
+  def time_zone_periods_from_wall_datetime(_, "Etc/UTC"),
+      do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
+
   def time_zone_periods_from_wall_datetime(naive_datetime, time_zone) do
-    with {:ok, periods_by_year} <- PeriodsProvider.periods_by_year(time_zone) do
-      wall_gregorian_seconds = NaiveDateTime.diff(naive_datetime, ~N[0000-01-01 00:00:00])
+    with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
+      naive_datetime_to_gregorian_seconds(naive_datetime)
+      |> find_period_for_secs(periods, :wall)
+    end
+  end
 
-      found_periods =
-        Map.get(periods_by_year, naive_datetime.year, periods_by_year.minmax)
-        |> find_periods_for_timestamp(wall_gregorian_seconds, :wall_gregorian_seconds)
+  defp find_period_for_secs(secs, periods, time_modifier) do
+    case do_find_period_for_secs(secs, periods, time_modifier) do
+      {:max, utc_offset, rules_and_template} ->
+        periods = generate_dynamic_periods(secs, utc_offset, rules_and_template)
+        do_find_period_for_secs(secs, periods, time_modifier)
 
-      case found_periods do
-        [%{zone_abbr: _} = period] ->
-          {:ok, period}
-        [%{period_before_gap: _} = period] ->
-          {:gap, {period.period_before_gap, period.from.wall}, {period.period_after_gap, period.to.wall}}
-        [second_period, first_period] ->
-          {:ambiguous, first_period, second_period}
-        _ ->
-          raise "#{Enum.count(found_periods)} periods found"
+      result -> result
+    end
+  end
+
+  defp do_find_period_for_secs(secs, periods, :utc) do
+    case Enum.find(periods, fn {from, _, _, _} -> secs >= from end) do
+      {_, period, _, nil} ->
+        {:ok, period_to_map(period)}
+
+      {_, {utc_off, _, _}, _, rules_and_template} ->
+        {:max, utc_off, rules_and_template}
+    end
+  end
+
+  defp do_find_period_for_secs(secs, periods, :wall), do: find_period_for_wall_secs(secs, periods)
+
+  # receives wall gregorian seconds (also referred as the 'given timestamp' in the comments below)
+  # and the list of transitions
+  defp find_period_for_wall_secs(_, [{0, period, _, _}]), do: {:ok, period_to_map(period)}
+
+  defp find_period_for_wall_secs(secs, [{utc_secs, period = {utc_off, std_off, _}, prev_period = {prev_utc_off, prev_std_off, _}, rules_and_template} | tail]) do
+    # utc_secs + utc_off + std_off = wall gregorian seconds
+    if secs < utc_secs + utc_off + std_off do
+      # the given timestamp occurs in a gap if it occurs between
+      # the utc timestamp + the previous offset and
+      # the utc timestamp + the offset (= this transition's wall time)
+      if secs >= utc_secs + prev_utc_off + prev_std_off do
+        {:gap,
+          {period_to_map(prev_period), utc_secs + prev_utc_off + prev_std_off |> gregorian_seconds_to_naive_datetime},
+          {period_to_map(period), utc_secs + utc_off + std_off |> gregorian_seconds_to_naive_datetime}}
+      else
+        # the given timestamp occurs before this transition and there is no gap with the previous period,
+        # so continue iterating
+        find_period_for_wall_secs(secs, tail)
+      end
+    else
+      # the given timestamp occurs during two periods if it occurs between
+      # the utc timestamp + the offset (= this transition's wall time) and
+      # the utc timestamp + the previous offset
+      if secs < utc_secs + prev_utc_off + prev_std_off do
+        {:ambiguous, period_to_map(prev_period), period_to_map(period)}
+      else
+        # the given timestamp occurs after this transition's wall time, and there is no gap nor overlap
+        case rules_and_template do
+          nil ->
+            {:ok, period_to_map(period)}
+          _ ->
+            {:max, utc_off, rules_and_template}
+        end
       end
     end
   end
 
-  defp generate_dynamic_periods([period1, period2], year) do
-    rule_records = IanaFileParser.denormalized_rule_data([
-      IanaFileParser.change_rule_year(period1.rule, year - 1),
-      IanaFileParser.change_rule_year(period1.rule, year),
-      IanaFileParser.change_rule_year(period2.rule, year)
+  defp period_to_map({utc_off, std_off, abbr}) do
+    %{
+      utc_offset: utc_off,
+      std_offset: std_off,
+      zone_abbr: abbr
+    }
+  end
+
+  defp generate_dynamic_periods(secs, utc_offset, {rule_name, format_time_zone_abbr}) do
+    %{year: year} = gregorian_seconds_to_naive_datetime(secs)
+
+    [rule1, rule2] = Tz.OngoingChangingRulesProvider.rules(rule_name)
+
+    rule_records = Tz.IanaFileParser.denormalized_rule_data([
+      Tz.IanaFileParser.change_rule_year(rule2, year - 1),
+      Tz.IanaFileParser.change_rule_year(rule2, year),
+      Tz.IanaFileParser.change_rule_year(rule1, year)
     ])
 
-    PeriodsBuilder.build_periods([period1.zone_line], rule_records)
-    |> PeriodsBuilder.shrink_and_reverse_periods()
+    zone_line = %{
+      from: :min,
+      to: :max,
+      rules: rule_name,
+      format_time_zone_abbr: format_time_zone_abbr,
+      std_offset_from_utc_time: utc_offset
+    }
+
+    Tz.PeriodsBuilder.build_periods([zone_line], rule_records, :dynamic_far_future)
+    |> Tz.PeriodsBuilder.periods_to_tuples_and_reverse()
   end
 
-  defp find_periods_for_timestamp(periods, timestamp, time_modifier) do
-    do_find_periods_for_timestamp(periods, timestamp, time_modifier)
-    |> maybe_generate_dynamic_periods(periods, timestamp, time_modifier)
+  defp iso_days_to_gregorian_seconds({days, {parts_in_day, 86_400_000_000}}) do
+    div(days * 86_400_000_000 + parts_in_day, 1_000_000)
   end
 
-  defp do_find_periods_for_timestamp(periods, timestamp, time_modifier) do
-    Enum.filter(periods, fn period ->
-      period_from = if(period.from == :min, do: :min, else: period.from[time_modifier])
-      period_to = if(period.to == :max, do: :max, else: period.to[time_modifier])
-
-      is_timestamp_in_range?(timestamp, period_from, period_to)
-    end)
+  defp naive_datetime_to_gregorian_seconds(datetime) do
+    NaiveDateTime.to_erl(datetime)
+    |> :calendar.datetime_to_gregorian_seconds()
   end
 
-  defp is_timestamp_in_range?(_, :min, :max), do: true
-  defp is_timestamp_in_range?(timestamp, :min, date_to), do: timestamp < date_to
-  defp is_timestamp_in_range?(timestamp, date_from, :max), do: timestamp >= date_from
-  defp is_timestamp_in_range?(timestamp, date_from, date_to), do: timestamp >= date_from  && timestamp < date_to
-
-  defp maybe_generate_dynamic_periods([%{to: :max} | _], [%{to: :max} = p1, %{to: :max} = p2 | _], timestamp, time_modifier) do
-    year = NaiveDateTime.add(~N[0000-01-01 00:00:00], timestamp).year
-    [p1, p2]
-    |> generate_dynamic_periods(year)
-    |> do_find_periods_for_timestamp(timestamp, time_modifier)
-  end
-
-  defp maybe_generate_dynamic_periods(found_periods, _periods, _timestamp, _time_modifier) do
-    found_periods
-  end
-
-  defp naive_datetime_from_iso_days(iso_days) do
-    Calendar.ISO.naive_datetime_from_iso_days(iso_days)
-    |> (&apply(NaiveDateTime, :new, Tuple.to_list(&1))).()
-    |> elem(1)
+  defp gregorian_seconds_to_naive_datetime(seconds) do
+    :calendar.gregorian_seconds_to_datetime(seconds)
+    |> NaiveDateTime.from_erl!()
   end
 end

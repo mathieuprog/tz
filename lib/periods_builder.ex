@@ -1,16 +1,34 @@
 defmodule Tz.PeriodsBuilder do
   @moduledoc false
 
-  def build_periods(zone_lines, rule_records, prev_period \\ nil, periods \\ [])
+  def build_periods(zone_lines, rule_records, mode \\ :compilation, prev_period \\ nil, periods \\ [])
 
-  def build_periods([], _rule_records, _prev_period, periods), do: Enum.reverse(periods)
+  def build_periods([], _rule_records, _mode, _prev_period, periods), do: Enum.reverse(periods)
 
-  def build_periods([zone_line | rest_zone_lines], rule_records, prev_period, periods) do
+  def build_periods([zone_line | rest_zone_lines], rule_records, mode, prev_period, periods) do
     rules = Map.get(rule_records, zone_line.rules, zone_line.rules)
 
-    new_periods = build_periods_for_zone_line(zone_line, rules, prev_period)
+    periods =
+      build_periods_for_zone_line(zone_line, rules, mode, prev_period)
+      |> concat_dedup_periods(periods)
 
-    build_periods(rest_zone_lines, rule_records, hd(new_periods), new_periods ++ periods)
+    build_periods(rest_zone_lines, rule_records, mode, hd(periods), periods)
+  end
+
+  defp concat_dedup_periods(periods, []), do: periods
+
+  defp concat_dedup_periods(periods1, [first_period2 | tail_period2] = periods2) do
+    last_period1 = List.last(periods1)
+    compare_keys = [:std_offset_from_utc_time, :local_offset_from_std_time, :zone_abbr]
+
+    cond do
+      Map.take(last_period1, compare_keys) == Map.take(first_period2, compare_keys) ->
+        (periods1 |> Enum.reverse() |> tl() |> Enum.reverse())
+        ++ [%{first_period2 | to: last_period1.to} | tail_period2]
+
+      true ->
+        periods1 ++ periods2
+    end
   end
 
   defp offset_diff_from_prev_period(_zone_line, _local_offset, nil), do: 0
@@ -20,31 +38,7 @@ defmodule Tz.PeriodsBuilder do
     total_offset - prev_total_offset
   end
 
-  defp maybe_build_gap_period(_zone_line, _local_offset, %{to: :max}, _period), do: nil
-  defp maybe_build_gap_period(zone_line, local_offset, prev_period, period) do
-    offset_diff = offset_diff_from_prev_period(zone_line, local_offset, prev_period)
-
-    if offset_diff > 0 do
-      if period.from.utc_gregorian_seconds != prev_period.to.utc_gregorian_seconds do
-        raise "logic error"
-      end
-
-      %{
-        period_before_gap: prev_period,
-        period_after_gap: period,
-        from: prev_period.to,
-        to: period.from
-      }
-    else
-      if offset_diff < 0 do
-        if period.from.utc_gregorian_seconds != prev_period.to.utc_gregorian_seconds do
-          raise "logic error"
-        end
-      end
-    end
-  end
-
-  defp build_periods_for_zone_line(zone_line, offset, prev_period) when is_integer(offset) do
+  defp build_periods_for_zone_line(zone_line, offset, _mode, prev_period) when is_integer(offset) do
     if zone_line.from != :min && prev_period != nil do
       {zone_from, zone_from_modifier} = zone_line.from
       if prev_period.to[zone_from_modifier] != zone_from do
@@ -61,20 +55,16 @@ defmodule Tz.PeriodsBuilder do
         add_to_and_convert_date_tuple({prev_period.to.wall, :wall}, offset_diff, zone_line.std_offset_from_utc_time, offset)
       end
 
-    period = %{
+    [%{
       from: period_from,
       to: convert_date_tuple(zone_line.to, zone_line.std_offset_from_utc_time, offset),
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
       local_offset_from_std_time: offset,
       zone_abbr: zone_abbr(zone_line, offset)
-    }
-
-    maybe_build_gap_period = maybe_build_gap_period(zone_line, offset, prev_period, period)
-
-    if maybe_build_gap_period, do: [period, maybe_build_gap_period], else: [period]
+    }]
   end
 
-  defp build_periods_for_zone_line(zone_line, rules, prev_period) when is_list(rules) do
+  defp build_periods_for_zone_line(zone_line, rules, mode, prev_period) when is_list(rules) do
     if zone_line.from != :min && prev_period != nil do
       {zone_from, zone_from_modifier} = zone_line.from
       if prev_period.to[zone_from_modifier] != zone_from do
@@ -82,40 +72,36 @@ defmodule Tz.PeriodsBuilder do
       end
     end
 
-    zone_line_rules =
-      if(zone_line.from == :min && zone_line.to == :max) do
-        rules
-      else
-        filter_rules_for_zone_line(zone_line, rules, prev_period, if(prev_period == nil, do: 0, else: prev_period.local_offset_from_std_time))
-      end
-
-    zone_line_rules = maybe_pad_left_rule(zone_line, zone_line_rules, prev_period)
-
-    zone_line_rules = trim_zone_rules(zone_line, zone_line_rules, prev_period)
-
-    do_build_periods_for_zone_line(zone_line, zone_line_rules, prev_period, [])
+    if mode == :dynamic_far_future do
+      rules
+    else
+      rules
+      |> filter_rules_for_zone_line(zone_line, prev_period, if(prev_period == nil, do: 0, else: prev_period.local_offset_from_std_time))
+      |> maybe_pad_left_rule(zone_line, prev_period)
+      |> trim_zone_rules(zone_line, prev_period)
+    end
+    |> do_build_periods_for_zone_line(zone_line, prev_period, [])
   end
 
-  defp filter_rules_for_zone_line(zone_line, rules, prev_period, prev_local_offset_from_std_time, filtered_rules \\ [])
-  defp filter_rules_for_zone_line(_zone_line, [], _, _, filtered_rules), do: Enum.reverse(filtered_rules)
-  defp filter_rules_for_zone_line(zone_line, [rule | rest_rules], prev_period, prev_local_offset_from_std_time, filtered_rules) do
+  defp filter_rules_for_zone_line(rules, zone_line, prev_period, prev_local_offset_from_std_time, filtered_rules \\ [])
+  defp filter_rules_for_zone_line(rules, %{from: :min, to: :max}, _, _, _), do: rules
+  defp filter_rules_for_zone_line([], _zone_line, _, _, filtered_rules), do: Enum.reverse(filtered_rules)
+  defp filter_rules_for_zone_line([rule | rest_rules], zone_line, prev_period, prev_local_offset_from_std_time, filtered_rules) do
     is_rule_included =
       cond do
         zone_line.to == :max && rule.to == :max ->
           true
+
         zone_line.to == :max ->
           {rule_to, rule_to_modifier} = rule.to
+          prev_period == nil || NaiveDateTime.compare(prev_period.to[rule_to_modifier], rule_to) == :lt
 
-          if prev_period == nil do
-            true
-          else
-            NaiveDateTime.compare(prev_period.to[rule_to_modifier], rule_to) == :lt
-          end
         zone_line.from == :min || rule.to == :max ->
           {zone_to, zone_to_modifier} = zone_line.to
           rule_from = convert_date_tuple(rule.from, prev_period.std_offset_from_utc_time, prev_local_offset_from_std_time)
 
           NaiveDateTime.compare(zone_to, rule_from[zone_to_modifier]) == :gt
+
         true ->
           {zone_to, zone_to_modifier} = zone_line.to
           {rule_to, rule_to_modifier} = rule.to
@@ -126,19 +112,17 @@ defmodule Tz.PeriodsBuilder do
       end
 
     if is_rule_included do
-      filter_rules_for_zone_line(zone_line, rest_rules, prev_period, rule.local_offset_from_std_time, [rule | filtered_rules])
+      filter_rules_for_zone_line(rest_rules, zone_line, prev_period, rule.local_offset_from_std_time, [rule | filtered_rules])
     else
-      filter_rules_for_zone_line(zone_line, rest_rules, prev_period, prev_local_offset_from_std_time, filtered_rules)
+      filter_rules_for_zone_line(rest_rules, zone_line, prev_period, prev_local_offset_from_std_time, filtered_rules)
     end
   end
 
-  defp trim_zone_rules(_zone_line, [], _), do: []
-  defp trim_zone_rules(zone_line, rules, prev_period) do
-    first_rule = List.first(rules)
-
+  defp trim_zone_rules([], _zone_line, _), do: []
+  defp trim_zone_rules([first_rule | tail_rules] = rules, zone_line, prev_period) do
     rules =
       if rule_starts_before_zone_line_range?(zone_line, first_rule, if(prev_period == nil, do: 0, else: prev_period.local_offset_from_std_time)) do
-        [%{first_rule | from: zone_line.from} | tl(rules)]
+        [%{first_rule | from: zone_line.from} | tail_rules]
       else
         rules
       end
@@ -168,9 +152,9 @@ defmodule Tz.PeriodsBuilder do
     NaiveDateTime.compare(rule_to[zone_to_modifier], zone_to) == :gt
   end
 
-  defp maybe_pad_left_rule(_zone_line, [], _), do: []
+  defp maybe_pad_left_rule([], _zone_line, _), do: []
 
-  defp maybe_pad_left_rule(%{from: :min}, [first_rule | _] = rules, _) do
+  defp maybe_pad_left_rule([first_rule | _] = rules, %{from: :min}, _) do
     rule = %{
       record_type: :rule,
       from: :min,
@@ -182,9 +166,9 @@ defmodule Tz.PeriodsBuilder do
     [rule | rules]
   end
 
-  defp maybe_pad_left_rule(_zone_line, rules, nil), do: rules
+  defp maybe_pad_left_rule(rules, _zone_line, nil), do: rules
 
-  defp maybe_pad_left_rule(zone_line, [first_rule | _] = rules, prev_period) do
+  defp maybe_pad_left_rule([first_rule | _] = rules, zone_line, prev_period) do
     {rule_from, rule_from_modifier} = first_rule.from
 
     if NaiveDateTime.compare(prev_period.to[rule_from_modifier], rule_from) == :lt do
@@ -209,9 +193,9 @@ defmodule Tz.PeriodsBuilder do
     end
   end
 
-  defp do_build_periods_for_zone_line(_zone_line, [], _prev_period, periods), do: periods
+  defp do_build_periods_for_zone_line([], _zone_line, _prev_period, periods), do: periods
 
-  defp do_build_periods_for_zone_line(zone_line, [rule | rest_rules], prev_period, periods) do
+  defp do_build_periods_for_zone_line([rule | rest_rules], zone_line, prev_period, periods) do
     offset_diff = offset_diff_from_prev_period(zone_line, rule.local_offset_from_std_time, prev_period)
 
     period_from =
@@ -235,25 +219,16 @@ defmodule Tz.PeriodsBuilder do
       to: period_to,
       std_offset_from_utc_time: zone_line.std_offset_from_utc_time,
       local_offset_from_std_time: rule.local_offset_from_std_time,
-      zone_abbr: zone_abbr(zone_line, rule.local_offset_from_std_time, rule.letter)
+      zone_abbr: zone_abbr(zone_line, rule.local_offset_from_std_time, rule.letter),
+      rules_and_template:
+        if(period_to == :max && prev_period && prev_period.to == :max) do
+          {zone_line.rules, zone_line.format_time_zone_abbr}
+        end
     }
 
-    period =
-      if period_to == :max do
-        period
-        |> Map.put(:rule, rule)
-        |> Map.put(:zone_line, zone_line)
-      else
-        period
-      end
+    periods = concat_dedup_periods([period], periods)
 
-    maybe_build_gap_period = maybe_build_gap_period(zone_line, rule.local_offset_from_std_time, prev_period, period)
-
-    periods = if maybe_build_gap_period, do: [maybe_build_gap_period | periods], else: periods
-
-    periods = [period | periods]
-
-    do_build_periods_for_zone_line(zone_line, rest_rules, period, periods)
+    do_build_periods_for_zone_line(rest_rules, zone_line, period, periods)
   end
 
   defp zone_abbr(zone_line, offset, letter \\ "") do
@@ -263,8 +238,10 @@ defmodule Tz.PeriodsBuilder do
       String.contains?(zone_line.format_time_zone_abbr, "/") ->
         [zone_abbr_std_time, zone_abbr_dst_time] = String.split(zone_line.format_time_zone_abbr, "/")
         if(is_standard_time, do: zone_abbr_std_time, else: zone_abbr_dst_time)
+
       String.contains?(zone_line.format_time_zone_abbr, "%s") ->
         String.replace(zone_line.format_time_zone_abbr, "%s", letter)
+
       true ->
         zone_line.format_time_zone_abbr
     end
@@ -280,167 +257,62 @@ defmodule Tz.PeriodsBuilder do
   defp convert_date_tuple(:min, _, _), do: :min
   defp convert_date_tuple(:max, _, _), do: :max
   defp convert_date_tuple({date, time_modifier}, std_offset_from_utc_time, local_offset_from_std_time) do
-    map_of_dates = %{
+    utc = convert_date(date, std_offset_from_utc_time, local_offset_from_std_time, time_modifier, :utc)
+    %{
+      utc: utc,
       wall: convert_date(date, std_offset_from_utc_time, local_offset_from_std_time, time_modifier, :wall),
-      utc: convert_date(date, std_offset_from_utc_time, local_offset_from_std_time, time_modifier, :utc),
       standard: convert_date(date, std_offset_from_utc_time, local_offset_from_std_time, time_modifier, :standard)
     }
-
-    map_of_dates
-    |> Map.put(:utc_gregorian_seconds, NaiveDateTime.diff(map_of_dates.utc, ~N[0000-01-01 00:00:00]))
-    |> Map.put(:wall_gregorian_seconds, NaiveDateTime.diff(map_of_dates.wall, ~N[0000-01-01 00:00:00]))
+    |> Map.put(:utc_gregorian_seconds, naive_datetime_to_gregorian_seconds(utc))
   end
 
-  defp is_period_gap?(%{period_before_gap: _}), do: true
-  defp is_period_gap?(_), do: false
+  def periods_to_tuples_and_reverse(periods, shrank_periods \\ [], prev_period \\ nil)
 
-  def shrink_and_reverse_periods(periods, shrank_periods \\ [])
+  def periods_to_tuples_and_reverse([], shrank_periods, _), do: shrank_periods
 
-  def shrink_and_reverse_periods([], shrank_periods), do: shrank_periods
+  def periods_to_tuples_and_reverse([period | tail], shrank_periods, prev_period) do
+    period = {
+      if(period.from == :min, do: 0, else: period.from.utc_gregorian_seconds),
+      {
+        period.std_offset_from_utc_time,
+        period.local_offset_from_std_time,
+        period.zone_abbr
+      },
+      prev_period && elem(prev_period, 1),
+      period[:rules_and_template]
+    }
 
-  def shrink_and_reverse_periods([period | tail], shrank_periods) do
-    {local_offset_from_std_time, period} = pop_in(period, [:local_offset_from_std_time])
-
-    period =
-      if local_offset_from_std_time != nil do
-        Map.put(period, :std_offset, local_offset_from_std_time)
-      else
-        period
-      end
-
-    {std_offset_from_utc_time, period} = pop_in(period, [:std_offset_from_utc_time])
-
-    period =
-      if std_offset_from_utc_time != nil do
-        Map.put(period, :utc_offset, std_offset_from_utc_time)
-      else
-        period
-      end
-
-    period =
-      if is_period_gap?(period) do
-        {local_offset_from_std_time, period} = pop_in(period, [:period_before_gap, :local_offset_from_std_time])
-        period = put_in(period, [:period_before_gap, :std_offset], local_offset_from_std_time)
-
-        {std_offset_from_utc_time, period} = pop_in(period, [:period_before_gap, :std_offset_from_utc_time])
-        period = put_in(period, [:period_before_gap, :utc_offset], std_offset_from_utc_time)
-
-        {local_offset_from_std_time, period} = pop_in(period, [:period_after_gap, :local_offset_from_std_time])
-        period = put_in(period, [:period_after_gap, :std_offset], local_offset_from_std_time)
-
-        {std_offset_from_utc_time, period} = pop_in(period, [:period_after_gap, :std_offset_from_utc_time])
-        put_in(period, [:period_after_gap, :utc_offset], std_offset_from_utc_time)
-      else
-        period
-      end
-
-    period =
-      if period.from != :min do
-        {_, period} = pop_in(period, [:from, :standard])
-        {_, period} = pop_in(period, [:from, :utc])
-        period
-      else
-        period
-      end
-
-    period =
-      if period.from != :min && !is_period_gap?(period) do
-        {_, period} = pop_in(period, [:from, :wall])
-        period
-      else
-        period
-      end
-
-    period =
-      if period.to != :max do
-        {_, period} = pop_in(period, [:to, :standard])
-        {_, period} = pop_in(period, [:to, :utc])
-        period
-      else
-        period
-      end
-
-    period =
-      if period.to != :max && !is_period_gap?(period) do
-        {_, period} = pop_in(period, [:to, :wall])
-        period
-      else
-        period
-      end
-
-    {_, period} = pop_in(period, [:period_before_gap, :from])
-    {_, period} = pop_in(period, [:period_before_gap, :to])
-    {_, period} = pop_in(period, [:period_after_gap, :from])
-    {_, period} = pop_in(period, [:period_after_gap, :to])
-
-    shrink_and_reverse_periods(tail, [period | shrank_periods])
+    periods_to_tuples_and_reverse(tail, [period | shrank_periods], period)
   end
 
-  def group_periods_by_year(periods) do
-    Enum.reduce(periods, %{}, fn
-      %{from: :min, to: :max}, periods_by_year ->
-        Map.put(periods_by_year, :minmax, periods)
-      period, periods_by_year ->
-        from_year =
-          if period.from != :min do
-            min(
-              NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.utc_gregorian_seconds).year,
-              NaiveDateTime.add(~N[0000-01-01 00:00:00], period.from.wall_gregorian_seconds).year
-            )
-          end
+  defp convert_date(ndt, _, _, modifier, modifier), do: ndt
 
-        to_year =
-          if period.to != :max do
-            max(
-              NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.utc_gregorian_seconds).year,
-              NaiveDateTime.add(~N[0000-01-01 00:00:00], period.to.wall_gregorian_seconds).year
-            )
-          end
-
-        periods_by_year =
-          Enum.reduce(Range.new(from_year || to_year - 1, to_year || from_year + 1), periods_by_year, fn
-            year, periods_by_year ->
-              list = Map.get(periods_by_year, year, [])
-              Map.put(periods_by_year, year, list ++ [period])
-          end)
-
-        if period.from == :min || period.to == :max do
-          list = Map.get(periods_by_year, :minmax, [])
-          Map.put(periods_by_year, :minmax, list ++ [period])
-        else
-          periods_by_year
-        end
-    end)
+  defp convert_date(ndt, standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :utc) do
+    NaiveDateTime.add(ndt, -1 * (standard_offset_from_utc_time + local_offset_from_standard_time), :second)
   end
 
-  def reject_time_zone_periods_before_year(periods_by_year, nil) do
-    periods_by_year
+  defp convert_date(ndt, _standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :standard) do
+    NaiveDateTime.add(ndt, -1 * local_offset_from_standard_time, :second)
   end
 
-  def reject_time_zone_periods_before_year(periods_by_year, reject_before_year) do
-    Enum.reject(periods_by_year, fn {year, _} -> year < reject_before_year end)
-    |> Enum.into(%{})
+  defp convert_date(ndt, standard_offset_from_utc_time, local_offset_from_standard_time, :utc, :wall) do
+    NaiveDateTime.add(ndt, standard_offset_from_utc_time + local_offset_from_standard_time, :second)
   end
 
-  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :wall, :wall), do: naive_date_time
-  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :utc, :utc), do: naive_date_time
-  defp convert_date(naive_date_time, _standard_offset_from_utc_time, _local_offset_from_standard_time, :standard, :standard), do: naive_date_time
-  defp convert_date(naive_date_time, standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :utc) do
-    NaiveDateTime.add(naive_date_time, -1 * (standard_offset_from_utc_time + local_offset_from_standard_time), :second)
+  defp convert_date(ndt, standard_offset_from_utc_time, _local_offset_from_standard_time, :utc, :standard) do
+    NaiveDateTime.add(ndt, standard_offset_from_utc_time, :second)
   end
-  defp convert_date(naive_date_time, _standard_offset_from_utc_time, local_offset_from_standard_time, :wall, :standard) do
-    NaiveDateTime.add(naive_date_time, -1 * local_offset_from_standard_time, :second)
+
+  defp convert_date(ndt, standard_offset_from_utc_time, _local_offset_from_standard_time, :standard, :utc) do
+    NaiveDateTime.add(ndt, -1 * standard_offset_from_utc_time, :second)
   end
-  defp convert_date(naive_date_time, standard_offset_from_utc_time, local_offset_from_standard_time, :utc, :wall) do
-    NaiveDateTime.add(naive_date_time, standard_offset_from_utc_time + local_offset_from_standard_time, :second)
+
+  defp convert_date(ndt, _standard_offset_from_utc_time, local_offset_from_standard_time, :standard, :wall) do
+    NaiveDateTime.add(ndt, local_offset_from_standard_time, :second)
   end
-  defp convert_date(naive_date_time, standard_offset_from_utc_time, _local_offset_from_standard_time, :utc, :standard) do
-    NaiveDateTime.add(naive_date_time, standard_offset_from_utc_time, :second)
-  end
-  defp convert_date(naive_date_time, standard_offset_from_utc_time, _local_offset_from_standard_time, :standard, :utc) do
-    NaiveDateTime.add(naive_date_time, -1 * standard_offset_from_utc_time, :second)
-  end
-  defp convert_date(naive_date_time, _standard_offset_from_utc_time, local_offset_from_standard_time, :standard, :wall) do
-    NaiveDateTime.add(naive_date_time, local_offset_from_standard_time, :second)
+
+  defp naive_datetime_to_gregorian_seconds(datetime) do
+    NaiveDateTime.to_erl(datetime)
+    |> :calendar.datetime_to_gregorian_seconds()
   end
 end
