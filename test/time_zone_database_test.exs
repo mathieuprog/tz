@@ -89,6 +89,6 @@ defmodule TimeZoneDatabaseTest do
   end
 
   test "version" do
-    assert Regex.match?(~r/^20[0-9]{2}[a-z]$/, Tz.version())
+    assert "2020d" == Tz.version()
   end
 end
