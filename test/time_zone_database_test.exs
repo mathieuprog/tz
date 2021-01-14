@@ -89,6 +89,6 @@ defmodule TimeZoneDatabaseTest do
   end
 
   test "version" do
-    assert "2020d" == Tz.version()
+    assert "2020f" == Tz.version()
   end
 end

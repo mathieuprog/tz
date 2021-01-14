@@ -8,7 +8,7 @@ module can, by default, only operate on datetimes in the UTC time zone. Alternat
 third-party libraries, such as `tz`, to bring in time zone support and deal with datetimes in other time zones than UTC.
 
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
-[IANA](https://www.iana.org). As of version 0.11.0, `tz` uses version _tzdata2020d_ of the IANA time zone database.
+[IANA](https://www.iana.org). As of version 0.12.0, `tz` uses version _tzdata2020f_ of the IANA time zone database.
 
 ## Features
 
@@ -32,14 +32,14 @@ The time zone periods are computed and made available in Elixir maps during comp
 
 To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supervisor:
 
-```
+```elixir
 {Tz.UpdatePeriodically, []}
 ```
 
 If you do not wish to update automatically, but still wish to be alerted for new upcoming IANA updates, add
 `Tz.WatchPeriodically` as a child in your supervisor:
 
-```
+```elixir
 {Tz.WatchPeriodically, []}
 ```
 
@@ -47,12 +47,12 @@ This will simply log to your server when a new time zone database is available.
 
 Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
 
-```
+```elixir
 defp deps do
   [
     {:castore, "~> 0.1.5"},
     {:mint, "~> 1.0"},
-    {:tz, "~> 0.11.0"}
+    {:tz, "~> 0.12.0"}
   ]
 end
 ```
@@ -60,17 +60,17 @@ end
 ## Usage
 
 To use the `tz` database, either configure it via configuration:
-```
+```elixir
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
 ```
 
 or by calling `Calendar.put_time_zone_database/1`:
-```
+```elixir
 Calendar.put_time_zone_database(Tz.TimeZoneDatabase)
 ```
 
 or by passing the module name `Tz.TimeZoneDatabase` directly to the functions that need a time zone database:
-```
+```elixir
 DateTime.now("America/Sao_Paulo", Tz.TimeZoneDatabase)
 ```
 
@@ -83,7 +83,7 @@ about handling datetimes with time zones.
 
 You can decrease **compilation time**, by rejecting time zone periods before a given year:
 
-```
+```elixir
 config :tz, reject_time_zone_periods_before_year: 2010
 ```
 
@@ -98,7 +98,7 @@ computations is a slow operation.
 You can decrease **period lookup time** for such periods lookups, by specifying until what year those periods have to be
 computed:
 
-```
+```elixir
 config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
@@ -111,7 +111,7 @@ Add `tz` for Elixir as a dependency in your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:tz, "~> 0.11.0"}
+    {:tz, "~> 0.12.0"}
   ]
 end
 ```
