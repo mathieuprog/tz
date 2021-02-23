@@ -7,8 +7,6 @@ defmodule Tz.Compiler do
   alias Tz.PeriodsBuilder
   alias Tz.IanaFileParser
 
-  @reject_periods_before_year Application.get_env(:tz, :reject_time_zone_periods_before_year)
-
   def compile() do
     tz_data_dir_name =
       File.ls!(:code.priv_dir(:tz))
@@ -32,7 +30,7 @@ defmodule Tz.Compiler do
             periods =
               PeriodsBuilder.build_periods(zone_lines, rule_records)
               |> PeriodsBuilder.periods_to_tuples_and_reverse()
-              |> reject_periods_before_year(@reject_periods_before_year)
+              |> reject_periods_before_year(reject_periods_before_year())
 
             {:periods, zone_name, periods}
           end
@@ -123,5 +121,9 @@ defmodule Tz.Compiler do
     module = :"Elixir.Tz.OngoingChangingRulesProvider"
     Module.create(module, quoted, Macro.Env.location(__ENV__))
     :code.purge(module)
+  end
+
+  defp reject_periods_before_year() do
+    Application.get_env(:tz, :reject_time_zone_periods_before_year)
   end
 end
