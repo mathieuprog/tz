@@ -88,6 +88,29 @@ defmodule TimeZoneDatabaseTest do
     assert {:ok, datetime} = result
   end
 
+  test "lmt no longitude" do
+    naive_date_time = ~N[0100-01-01 00:00:00]
+    time_zone = "Europe/Brussels"
+
+    result = DateTime.from_naive(naive_date_time, time_zone, Tz.TimeZoneDatabase)
+
+    assert {:ok, datetime} = result
+    assert datetime.zone_abbr == "LMT"
+    assert datetime == DateTime.add(datetime, -86400, :second, Tz.TimeZoneDatabase) |> DateTime.add(86400, :second, Tz.TimeZoneDatabase)
+  end
+
+  test "lmt with longitude" do
+    naive_date_time = ~N[0100-01-01 00:00:00]
+    time_zone = "Europe/Brussels|-13"
+
+    result = DateTime.from_naive(naive_date_time, time_zone, Tz.TimeZoneDatabase)
+
+    assert {:ok, datetime} = result
+    assert datetime.zone_abbr == "LMT"
+    assert datetime.utc_offset == -3120
+    assert datetime == DateTime.add(datetime, -86400, :second, Tz.TimeZoneDatabase) |> DateTime.add(86400, :second, Tz.TimeZoneDatabase)
+  end
+
   test "version" do
     assert "2020f" == Tz.version()
   end

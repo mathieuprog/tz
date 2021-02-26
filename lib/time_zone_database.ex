@@ -12,9 +12,31 @@ defmodule Tz.TimeZoneDatabase do
       do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
 
   def time_zone_period_from_utc_iso_days(iso_days, time_zone) do
+    # Parse special format that accounts for LMT with custom longitude "Europe/London|10.2"
+    [time_zone, longitude] = case String.split(time_zone, "|") do
+      [ time_zone ] -> [time_zone, nil]
+      [ time_zone, longitude ] -> [ time_zone, longitude ]
+    end
     with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
-      iso_days_to_gregorian_seconds(iso_days)
+      result = iso_days_to_gregorian_seconds(iso_days)
       |> find_period_for_secs(periods, :utc)
+
+      err = elem(result, 0)
+      case err do
+        # If the zone is found and it is LMT with non-nil longitude, adjust it.
+        :ok ->
+          found_zone = elem(result, 1)
+          %{utc_offset: utc_offset, std_offset: std_offset, zone_abbr: zone_abbr} = found_zone
+          utc_offset = cond do
+            zone_abbr == "LMT" and longitude != nil ->
+              round((Float.parse(longitude) |> elem(0)) * 4 * 60)
+            true ->
+              utc_offset
+          end
+          {:ok, %{utc_offset: utc_offset, std_offset: std_offset, zone_abbr: zone_abbr}}
+        # Otherwise, return the original result
+        _ -> result
+      end
     end
   end
 
@@ -23,9 +45,31 @@ defmodule Tz.TimeZoneDatabase do
       do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
 
   def time_zone_periods_from_wall_datetime(naive_datetime, time_zone) do
+    # Parse special format that accounts for LMT with custom longitude "Europe/London|10.2"
+    [time_zone, longitude] = case String.split(time_zone, "|") do
+      [ time_zone ] -> [time_zone, nil]
+      [ time_zone, longitude ] -> [ time_zone, longitude ]
+    end
     with {:ok, periods} <- PeriodsProvider.periods(time_zone) do
-      naive_datetime_to_gregorian_seconds(naive_datetime)
+      result = naive_datetime_to_gregorian_seconds(naive_datetime)
       |> find_period_for_secs(periods, :wall)
+      err = elem(result, 0)
+
+      case err do
+        # If the zone is found and it is LMT with non-nil longitude, adjust it.
+        :ok ->
+          found_zone = elem(result, 1)
+          %{utc_offset: utc_offset, std_offset: std_offset, zone_abbr: zone_abbr} = found_zone
+          utc_offset = cond do
+            zone_abbr == "LMT" and longitude != nil ->
+              round((Float.parse(longitude) |> elem(0)) * 4 * 60)
+            true ->
+              utc_offset
+          end
+          {:ok, %{utc_offset: utc_offset, std_offset: std_offset, zone_abbr: zone_abbr}}
+        # Otherwise, return the original result
+        _ -> result
+      end
     end
   end
 
