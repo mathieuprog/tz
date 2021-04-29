@@ -266,11 +266,11 @@ defmodule Tz.PeriodsBuilder do
     |> Map.put(:utc_gregorian_seconds, naive_datetime_to_gregorian_seconds(utc))
   end
 
-  def periods_to_tuples_and_reverse(periods, shrank_periods \\ [], prev_period \\ nil)
+  def periods_to_tuples_and_reverse(periods, periods_as_tuples \\ [], prev_period \\ nil)
 
-  def periods_to_tuples_and_reverse([], shrank_periods, _), do: shrank_periods
+  def periods_to_tuples_and_reverse([], periods_as_tuples, _), do: periods_as_tuples
 
-  def periods_to_tuples_and_reverse([period | tail], shrank_periods, prev_period) do
+  def periods_to_tuples_and_reverse([period | tail], periods_as_tuples, prev_period) do
     period = {
       if(period.from == :min, do: 0, else: period.from.utc_gregorian_seconds),
       {
@@ -282,7 +282,7 @@ defmodule Tz.PeriodsBuilder do
       period[:rules_and_template]
     }
 
-    periods_to_tuples_and_reverse(tail, [period | shrank_periods], period)
+    periods_to_tuples_and_reverse(tail, [period | periods_as_tuples], period)
   end
 
   defp convert_date(ndt, _, _, modifier, modifier), do: ndt
