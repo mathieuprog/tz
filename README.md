@@ -8,7 +8,7 @@ module can, by default, only operate on datetimes in the UTC time zone. Alternat
 third-party libraries, such as `tz`, to bring in time zone support and deal with datetimes in other time zones than UTC.
 
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
-[IANA](https://www.iana.org). As of version 0.14.0, `tz` uses version _tzdata2021a_ of the IANA time zone database.
+[IANA](https://www.iana.org). As of version 0.15.0, `tz` uses version _tzdata2021a_ of the IANA time zone database.
 
 ## Features
 
@@ -71,7 +71,7 @@ defp deps do
   [
     {:castore, "~> 0.1.5"},
     {:mint, "~> 1.0"},
-    {:tz, "~> 0.14.0"}
+    {:tz, "~> 0.15.0"}
   ]
 end
 ```
@@ -130,7 +130,7 @@ Add `tz` for Elixir as a dependency in your `mix.exs` file:
 ```elixir
 def deps do
   [
-    {:tz, "~> 0.14.0"}
+    {:tz, "~> 0.15.0"}
   ]
 end
 ```
