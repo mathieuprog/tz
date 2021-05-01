@@ -62,7 +62,7 @@ defp append_if(list, condition, item) do
 end
 ```
 
-In `config.exs`, add `config :calendar_storefront, env: Mix.env()`.
+In `config.exs`, add `config :my_app, env: Mix.env()`.
 
 Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
 
