@@ -45,6 +45,25 @@ If you do not wish to update automatically, but still wish to be alerted for new
 
 This will simply log to your server when a new time zone database is available.
 
+To avoid the updater to run while executing tests, you may conditionally add the child worker in your supervisor. For
+example:
+
+```elixir
+children = [
+  MyApp.RepoBase,
+  MyApp.Endpoint,
+]
+|> append_if(Application.get_env(:my_app, :env) != :test, {Tz.UpdatePeriodically, []})
+```
+
+```elixir
+defp append_if(list, condition, item) do
+  if condition, do: list ++ [item], else: list
+end
+```
+
+In `config.exs`, add `config :calendar_storefront, env: Mix.env()`.
+
 Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
 
 ```elixir
