@@ -74,7 +74,7 @@ defmodule Tz.Compiler do
       quote do
         @moduledoc(false)
 
-        def version() do
+        def database_version() do
           unquote(String.trim(tz_data_dir_name, "tzdata"))
         end
       end,

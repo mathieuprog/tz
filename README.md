@@ -123,6 +123,12 @@ config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + Na
 
 Note that increasing the year will also slightly increase compilation time, as it will generate more periods to compile.
 
+## Get the IANA time zone database version
+
+```elixir
+Tz.database_version() == "2021a"
+```
+
 ## Installation
 
 Add `tz` for Elixir as a dependency in your `mix.exs` file:

@@ -1,5 +1,5 @@
 defmodule Tz do
   alias Tz.PeriodsProvider
 
-  defdelegate version(), to: PeriodsProvider
+  defdelegate database_version(), to: PeriodsProvider
 end
