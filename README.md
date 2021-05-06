@@ -129,6 +129,20 @@ Note that increasing the year will also slightly increase compilation time, as i
 Tz.database_version() == "2021a"
 ```
 
+## Time zone utility functions
+
+Tz's API is intentionally kept as small as possible to implement Calendar.TimeZoneDatabase's behaviour. Utility functions
+around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_extra).
+
+* [`TzExtra.countries_time_zones/1`](https://github.com/mathieuprog/tz_extra#tzextracountries_time_zones1): returns a list of time zone data by country
+* [`TzExtra.time_zone_identifiers/1`](https://github.com/mathieuprog/tz_extra#tzextratime_zone_identifiers1): returns a list of time zone identifiers
+* [`TzExtra.civil_time_zone_identifiers/1`](https://github.com/mathieuprog/tz_extra#tzextracivil_time_zone_identifiers1): returns a list of time zone identifiers that are tied to a country
+* [`TzExtra.countries/0`](https://github.com/mathieuprog/tz_extra#tzextracountries0): returns a list of ISO country codes with their English name
+* [`TzExtra.get_canonical_time_zone_identifier/1`](https://github.com/mathieuprog/tz_extra#tzextraget_canonical_time_zone_identifier1): returns the canonical time zone identifier for the given time zone identifier
+* [`TzExtra.Changeset.validate_time_zone_identifier/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_time_zone_identifier3): an Ecto Changeset validator, validating that the user input is a valid time zone
+* [`TzExtra.Changeset.validate_civil_time_zone_identifier/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_civil_time_zone_identifier3): an Ecto Changeset validator, validating that the user input is a valid civil time zone
+* [`TzExtra.Changeset.validate_iso_country_code/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_iso_country_code3): an Ecto Changeset validator, validating that the user input is a valid ISO country code
+
 ## Installation
 
 Add `tz` for Elixir as a dependency in your `mix.exs` file:
