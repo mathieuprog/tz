@@ -131,7 +131,7 @@ Tz.database_version() == "2021a"
 
 ## Time zone utility functions
 
-Tz's API is intentionally kept as small as possible to implement Calendar.TimeZoneDatabase's behaviour. Utility functions
+Tz's API is intentionally kept as minimal as possible to implement Calendar.TimeZoneDatabase's behaviour. Utility functions
 around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_extra).
 
 * [`TzExtra.countries_time_zones/1`](https://github.com/mathieuprog/tz_extra#tzextracountries_time_zones1): returns a list of time zone data by country
@@ -142,6 +142,11 @@ around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_ex
 * [`TzExtra.Changeset.validate_time_zone_identifier/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_time_zone_identifier3): an Ecto Changeset validator, validating that the user input is a valid time zone
 * [`TzExtra.Changeset.validate_civil_time_zone_identifier/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_civil_time_zone_identifier3): an Ecto Changeset validator, validating that the user input is a valid civil time zone
 * [`TzExtra.Changeset.validate_iso_country_code/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_iso_country_code3): an Ecto Changeset validator, validating that the user input is a valid ISO country code
+
+## Other IANA time zone database implementations
+
+* https://github.com/hrzndhrn/time_zone_info
+* https://github.com/lau/tzdata (not recommended due to bugs)
 
 ## Installation
 
