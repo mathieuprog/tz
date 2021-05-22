@@ -31,10 +31,10 @@ if Code.ensure_loaded?(Mint.HTTP) do
     defp maybe_update_tz_database() do
       case fetch_iana_tz_version() do
         {:ok, latest_version} ->
-          if latest_version != PeriodsProvider.version() do
+          if latest_version != PeriodsProvider.database_version() do
             case update_tz_database(latest_version) do
               :ok ->
-                delete_tz_database(PeriodsProvider.version())
+                delete_tz_database(PeriodsProvider.database_version())
                 :updated
               _ -> :error
             end
