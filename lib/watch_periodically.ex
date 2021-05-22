@@ -10,7 +10,7 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
       case Updater.fetch_iana_tz_version() do
         {:ok, latest_version} ->
-          if latest_version != PeriodsProvider.version() do
+          if latest_version != PeriodsProvider.database_version() do
             link = "https://data.iana.org/time-zones/releases/tzdata#{latest_version}.tar.gz"
             Logger.warn("Tz found a more recent time zone database available for download at #{link}")
           end
