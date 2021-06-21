@@ -6,7 +6,6 @@ defmodule Tz.Updater do
   alias Tz.Compiler
   alias Tz.HTTP
   alias Tz.HTTP.HTTPResponse
-  alias Tz.PeriodsProvider
 
   def maybe_recompile() do
     if maybe_update_tz_database() == :updated do
@@ -31,10 +30,10 @@ defmodule Tz.Updater do
   defp maybe_update_tz_database() do
     case fetch_iana_tz_version() do
       {:ok, latest_version} ->
-        if latest_version != PeriodsProvider.database_version() do
+        if latest_version != latest_version_saved() do
           case update_tz_database(latest_version) do
             :ok ->
-              delete_tz_database(PeriodsProvider.database_version())
+              delete_tz_database(latest_version_saved())
               :updated
 
             _ ->
@@ -103,5 +102,16 @@ defmodule Tz.Updater do
   defp delete_tz_database(version) do
     Path.join(:code.priv_dir(:tz), "tzdata#{version}")
     |> File.rm_rf!()
+  end
+
+  defp latest_version_saved() do
+    tz_data_dir_name =
+      File.ls!(:code.priv_dir(:tz))
+      |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
+      |> Enum.max()
+
+    "tzdata" <> version = tz_data_dir_name
+
+    version
   end
 end
