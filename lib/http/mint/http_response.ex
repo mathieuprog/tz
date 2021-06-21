@@ -18,7 +18,7 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
     def parse([{:done, _}], %__MODULE__{} = http_response) do
       body =
-        body
+        http_response.body
         |> Enum.reverse()
         |> Enum.join()
 

@@ -76,6 +76,10 @@ defp deps do
 end
 ```
 
+### Custom HTTP client
+
+You may implement the `Tz.HTTP.HTTPClient` behaviour in order to use another HTTP client.
+
 ## Usage
 
 To use the `tz` database, either configure it via configuration:
