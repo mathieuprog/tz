@@ -1,34 +1,35 @@
-if Code.ensure_loaded?(Mint.HTTP) do
-  defmodule Tz.UpdatePeriodically do
-    use GenServer
-    require Logger
-    alias Tz.Updater
+defmodule Tz.UpdatePeriodically do
+  use GenServer
+  require Logger
+  alias Tz.HTTP
+  alias Tz.Updater
 
-    defp maybe_recompile() do
-      Logger.debug("Tz is checking for IANA time zone database updates")
+  defp maybe_recompile() do
+    Logger.debug("Tz is checking for IANA time zone database updates")
 
-      Updater.maybe_recompile()
-    end
+    Updater.maybe_recompile()
+  end
 
-    def start_link(_) do
-      GenServer.start_link(__MODULE__, %{})
-    end
+  def start_link(_) do
+    HTTP.get_http_client!()
 
-    def init(state) do
-      maybe_recompile()
+    GenServer.start_link(__MODULE__, %{})
+  end
 
-      {:ok, state}
-    end
+  def init(state) do
+    maybe_recompile()
 
-    def handle_info(:work, state) do
-      maybe_recompile()
+    {:ok, state}
+  end
 
-      schedule_work()
-      {:noreply, state}
-    end
+  def handle_info(:work, state) do
+    maybe_recompile()
 
-    defp schedule_work() do
-      Process.send_after(self(), :work, 24 * 60 * 60 * 1000) # In 24 hours
-    end
+    schedule_work()
+    {:noreply, state}
+  end
+
+  defp schedule_work() do
+    Process.send_after(self(), :work, 24 * 60 * 60 * 1000) # In 24 hours
   end
 end
