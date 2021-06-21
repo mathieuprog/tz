@@ -7,6 +7,8 @@ defmodule Tz.Updater do
   alias Tz.HTTP
   alias Tz.HTTP.HTTPResponse
 
+  @dir Application.get_env(:tz, :data_dir, :code.priv_dir(:tz))
+
   def maybe_recompile() do
     if maybe_update_tz_database() == :updated do
       Logger.info("Tz is recompiling time zone periods...")
@@ -73,7 +75,7 @@ defmodule Tz.Updater do
   end
 
   defp extract_tz_database(version, content) do
-    tmp_archive_path = Path.join(:code.priv_dir(:tz), "tzdata#{version}.tar.gz")
+    tmp_archive_path = Path.join(@dir, "tzdata#{version}.tar.gz")
     tz_data_dir = "tzdata#{version}"
     :ok = File.write!(tmp_archive_path, content)
 
@@ -92,7 +94,7 @@ defmodule Tz.Updater do
     ]
     :ok = :erl_tar.extract(tmp_archive_path, [
       :compressed,
-      {:cwd, Path.join(:code.priv_dir(:tz), tz_data_dir)},
+      {:cwd, Path.join(@dir, tz_data_dir)},
       {:files, files_to_extract}
     ])
 
@@ -100,13 +102,13 @@ defmodule Tz.Updater do
   end
 
   defp delete_tz_database(version) do
-    Path.join(:code.priv_dir(:tz), "tzdata#{version}")
+    Path.join(@dir, "tzdata#{version}")
     |> File.rm_rf!()
   end
 
   defp latest_version_saved() do
     tz_data_dir_name =
-      File.ls!(:code.priv_dir(:tz))
+      File.ls!(@dir)
       |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
       |> Enum.max()
 

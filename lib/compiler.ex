@@ -8,17 +8,18 @@ defmodule Tz.Compiler do
   alias Tz.IanaFileParser
 
   @reject_periods_before_year Application.get_env(:tz, :reject_time_zone_periods_before_year)
+  @dir Application.get_env(:tz, :data_dir, :code.priv_dir(:tz))
 
   def compile() do
     tz_data_dir_name =
-      File.ls!(:code.priv_dir(:tz))
+      File.ls!(@dir)
       |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
       |> Enum.max()
 
     {periods_and_links, ongoing_rules} =
       for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
         {zone_records, rule_records, link_records, ongoing_rules} =
-          IanaFileParser.parse(Path.join([:code.priv_dir(:tz), tz_data_dir_name, filename]))
+          IanaFileParser.parse(Path.join([@dir, tz_data_dir_name, filename]))
 
         Enum.each(rule_records, fn {rule_name, rules} ->
           ongoing_rules_count = Enum.count(rules, & &1.to == :max)
