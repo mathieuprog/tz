@@ -80,6 +80,29 @@ end
 
 You may implement the `Tz.HTTP.HTTPClient` behaviour in order to use another HTTP client.
 
+Example using [Finch](https://github.com/keathley/finch):
+```elixir
+defmodule MyApp.Tz.HTTPClient do
+  @behaviour Tz.HTTP.HTTPClient
+
+  alias Tz.HTTP.HTTPResponse
+
+  @impl Tz.HTTP.HTTPClient
+  def request(hostname, path) do
+    {:ok, response} =
+      Finch.build(:get, "https://" <> Path.join(hostname, path))
+      |> Finch.request(MyFinch)
+
+    %HTTPResponse{
+      status_code: response.status,
+      body: response.body
+    }
+  end
+end
+```
+
+You must return a `Tz.HTTP.HTTPResponse` struct with fields `:status_code` and `:body`.
+
 ## Usage
 
 To use the `tz` database, either configure it via configuration:
