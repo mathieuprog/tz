@@ -21,7 +21,7 @@ defmodule Tz.Updater do
   def fetch_iana_tz_version() do
     case HTTP.get_http_client!().request("data.iana.org", "/time-zones/tzdb/version") do
       %HTTPResponse{body: body, status_code: 200} ->
-        {:ok, body |> List.first() |> String.trim()}
+        {:ok, body |> String.trim()}
 
       _ ->
         :error
