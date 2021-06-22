@@ -11,6 +11,15 @@ defmodule Tz.Compiler do
   @dir Application.get_env(:tz, :data_dir, :code.priv_dir(:tz))
 
   def compile() do
+    if :code.priv_dir(:tz) != @dir do
+      dir =
+        File.ls!(:code.priv_dir(:tz))
+        |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
+        |> Enum.max()
+
+      File.cp_r!(Path.join(:code.priv_dir(:tz), dir), Path.join(@dir, dir))
+    end
+
     tz_data_dir_name =
       File.ls!(@dir)
       |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
