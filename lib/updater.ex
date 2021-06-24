@@ -6,11 +6,14 @@ defmodule Tz.Updater do
   alias Tz.Compiler
   alias Tz.HTTP
   alias Tz.HTTP.HTTPResponse
+  alias Tz.PeriodsProvider
 
   @dir Application.get_env(:tz, :data_dir, :code.priv_dir(:tz))
 
   def maybe_recompile() do
-    if maybe_update_tz_database() == :updated do
+    saved_tz_version = get_latest_tz_database()
+
+    if saved_tz_version != PeriodsProvider.database_version() do
       Logger.info("Tz is recompiling time zone periods...")
       Code.compiler_options(ignore_module_conflict: true)
       Compiler.compile()
@@ -29,23 +32,27 @@ defmodule Tz.Updater do
     end
   end
 
-  defp maybe_update_tz_database() do
+  defp get_latest_tz_database() do
+    latest_version_saved = latest_version_saved()
+
     case fetch_iana_tz_version() do
       {:ok, latest_version} ->
-        if latest_version != latest_version_saved() do
+        if latest_version != latest_version_saved do
           case update_tz_database(latest_version) do
             :ok ->
-              delete_tz_database(latest_version_saved())
-              :updated
+              delete_tz_database(latest_version_saved)
+              latest_version
 
-            _ ->
-              :error
+            :error ->
+              latest_version_saved
           end
+        else
+          latest_version
         end
 
       :error ->
         Logger.error("Tz failed to read the latest version of the IANA time zone database")
-        :no_update
+        latest_version_saved
     end
   end
 
