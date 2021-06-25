@@ -70,7 +70,7 @@ Lastly, add the http client `mint` and ssl certificate store `castore` into your
 defp deps do
   [
     {:castore, "~> 0.1.10"},
-    {:mint, "~> 1.2"},
+    {:mint, "~> 1.3"},
     {:tz, "~> 0.16.2"}
   ]
 end
