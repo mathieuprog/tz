@@ -4,31 +4,22 @@ defmodule Tz.Compiler do
   require Tz.IanaFileParser
   require Tz.PeriodsBuilder
 
-  alias Tz.PeriodsBuilder
+  alias Tz.IanaDataDir
   alias Tz.IanaFileParser
+  alias Tz.PeriodsBuilder
 
   @reject_periods_before_year Application.get_env(:tz, :reject_time_zone_periods_before_year)
-  @dir Application.get_env(:tz, :data_dir, :code.priv_dir(:tz))
 
   def compile() do
-    if :code.priv_dir(:tz) != @dir do
-      dir =
-        File.ls!(:code.priv_dir(:tz))
-        |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
-        |> Enum.max()
+    IanaDataDir.maybe_copy_iana_files_to_custom_dir()
 
-      File.cp_r!(Path.join(:code.priv_dir(:tz), dir), Path.join(@dir, dir))
-    end
-
-    tz_data_dir_name =
-      File.ls!(@dir)
-      |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
-      |> Enum.max()
+    tzdata_dir_path = IanaDataDir.tzdata_dir_path()
+    "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
 
     {periods_and_links, ongoing_rules} =
       for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
         {zone_records, rule_records, link_records, ongoing_rules} =
-          IanaFileParser.parse(Path.join([@dir, tz_data_dir_name, filename]))
+          IanaFileParser.parse(Path.join(tzdata_dir_path, filename))
 
         Enum.each(rule_records, fn {rule_name, rules} ->
           ongoing_rules_count = Enum.count(rules, & &1.to == :max)
@@ -60,7 +51,7 @@ defmodule Tz.Compiler do
             {periods_and_links ++ all_periods_and_links, Map.merge(ongoing_rules, all_ongoing_rules)}
           end)
 
-    compile_periods(periods_and_links, tz_data_dir_name)
+    compile_periods(periods_and_links, tzdata_version)
 
     compile_map_ongoing_changing_rules(ongoing_rules)
   end
@@ -79,13 +70,13 @@ defmodule Tz.Compiler do
     |> NaiveDateTime.from_erl!()
   end
 
-  def compile_periods(periods_and_links, tz_data_dir_name) do
+  def compile_periods(periods_and_links, tzdata_version) do
     quoted = [
       quote do
         @moduledoc(false)
 
         def database_version() do
-          unquote(String.trim(tz_data_dir_name, "tzdata"))
+          unquote(tzdata_version)
         end
       end,
       for period_or_link <- periods_and_links do
