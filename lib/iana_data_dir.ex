@@ -4,9 +4,9 @@ defmodule Tz.IanaDataDir do
 
   def dir_path(), do: @dir
 
-  def tzdata_dir_name() do
+  def tzdata_dir_name(parent_dir \\ @dir) do
     tz_data_dirs =
-      File.ls!(@dir)
+      File.ls!(parent_dir)
       |> Enum.filter(&Regex.match?(@regex_tzdata_dir_name, &1))
 
     if tz_data_dirs != [] do
@@ -38,12 +38,11 @@ defmodule Tz.IanaDataDir do
         raise "tzdata files not found"
 
       true ->
-        dir =
-          File.ls!(:code.priv_dir(:tz))
-          |> Enum.filter(&Regex.match?(@regex_tzdata_dir_name, &1))
-          |> Enum.max()
-
-        File.cp_r!(Path.join(:code.priv_dir(:tz), dir), Path.join(@dir, dir))
+        if dir_name = tzdata_dir_name(:code.priv_dir(:tz)) do
+          File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(@dir, dir_name))
+        else
+          raise "tzdata files not found"
+        end
     end
   end
 
