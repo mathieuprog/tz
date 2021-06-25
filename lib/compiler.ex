@@ -75,7 +75,7 @@ defmodule Tz.Compiler do
       quote do
         @moduledoc(false)
 
-        def database_version() do
+        def iana_version() do
           unquote(tzdata_version)
         end
       end,

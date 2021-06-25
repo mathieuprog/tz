@@ -14,7 +14,7 @@ defmodule Tz.Updater do
 
     saved_tz_version = get_latest_tz_database()
 
-    if saved_tz_version != PeriodsProvider.database_version() do
+    if saved_tz_version != PeriodsProvider.iana_version() do
       Logger.info("Tz is recompiling time zone periods...")
       Code.compiler_options(ignore_module_conflict: true)
       Compiler.compile()
