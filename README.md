@@ -150,6 +150,14 @@ config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + Na
 
 Note that increasing the year will also slightly increase compilation time, as it will generate more periods to compile.
 
+## Custom storage location of time zone files
+
+By default, the files are stored in the `priv` directory of the `tz` library. You may customize the directory that will hold all of the IANA timezone data. For example, if you want to store the files in your project's `priv` dir instead:
+
+```elixir
+config :tz, :data_dir, Path.join(Path.dirname(__DIR__), "priv")
+```
+
 ## Get the IANA time zone database version
 
 ```elixir
