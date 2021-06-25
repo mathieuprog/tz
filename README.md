@@ -101,7 +101,12 @@ defmodule MyApp.Tz.HTTPClient do
 end
 ```
 
-You must return a `Tz.HTTP.HTTPResponse` struct with fields `:status_code` and `:body`.
+A `Tz.HTTP.HTTPResponse` struct must be returned with fields `:status_code` and `:body`.
+
+The custom module must then be passed into the config:
+```elixir
+config :tz, :http_client, MyApp.Tz.HTTPClient
+```
 
 ## Usage
 
