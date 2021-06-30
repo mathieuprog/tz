@@ -86,6 +86,7 @@ defmodule MyApp.Tz.HTTPClient do
   @behaviour Tz.HTTP.HTTPClient
 
   alias Tz.HTTP.HTTPResponse
+  alias MyApp.MyFinch
 
   @impl Tz.HTTP.HTTPClient
   def request(hostname, path) do
