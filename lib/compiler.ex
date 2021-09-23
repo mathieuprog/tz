@@ -35,6 +35,10 @@ defmodule Tz.Compiler do
               |> PeriodsBuilder.periods_to_tuples_and_reverse()
               |> reject_periods_before_year(@reject_periods_before_year)
 
+            if length(periods) == 0 do
+              raise "no periods for time zone #{zone_name}"
+            end
+
             {:periods, zone_name, periods}
           end
 
@@ -59,10 +63,17 @@ defmodule Tz.Compiler do
   defp reject_periods_before_year(periods, nil), do: periods
 
   defp reject_periods_before_year(periods, reject_before_year) do
-    Enum.reject(periods, fn {secs, _, _, _} ->
-      %{year: year} = gregorian_seconds_to_naive_datetime(secs)
-      year < reject_before_year
-    end)
+    filtered_periods =
+      Enum.reject(periods, fn {secs, _, _, _} ->
+        %{year: year} = gregorian_seconds_to_naive_datetime(secs)
+        year < reject_before_year
+      end)
+
+    if length(filtered_periods) > 0 do
+      filtered_periods
+    else
+      periods
+    end
   end
 
   defp gregorian_seconds_to_naive_datetime(seconds) do
