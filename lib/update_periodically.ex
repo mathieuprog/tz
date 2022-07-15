@@ -19,7 +19,7 @@ defmodule Tz.UpdatePeriodically do
   def init(opts) do
     maybe_recompile()
     schedule_work(opts[:interval_in_days])
-    {:ok, %{}}
+    {:ok, %{opts: opts}}
   end
 
   def handle_info(:work, %{opts: opts}) do
