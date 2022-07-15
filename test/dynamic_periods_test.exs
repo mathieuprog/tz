@@ -1,7 +1,7 @@
 defmodule DynamicPeriodsTest do
   use ExUnit.Case
 
-  test "test dynamic periods" do
+  test "dynamic periods" do
     time_zone = "Antarctica/Troll"
 
     {:ok, datetime} =
