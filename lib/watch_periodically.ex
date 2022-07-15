@@ -27,12 +27,13 @@ defmodule Tz.WatchPeriodically do
   end
 
   def init(opts) do
+    watch(opts[:on_update])
+    schedule_work()
     {:ok, %{opts: opts}}
   end
 
   def handle_info(:work, %{opts: opts}) do
     watch(opts[:on_update])
-
     schedule_work()
     {:noreply, %{opts: opts}}
   end

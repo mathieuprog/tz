@@ -17,12 +17,13 @@ defmodule Tz.UpdatePeriodically do
   end
 
   def init(_opts) do
+    maybe_recompile()
+    schedule_work()
     {:ok, %{}}
   end
 
   def handle_info(:work, state) do
     maybe_recompile()
-
     schedule_work()
     {:noreply, state}
   end
