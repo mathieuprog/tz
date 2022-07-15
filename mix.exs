@@ -32,7 +32,8 @@ defmodule Tz.MixProject do
     [
       {:castore, "~> 0.1.11", optional: true},
       {:mint, "~> 1.4", optional: true},
-      {:ex_doc, "~> 0.25.3", only: :dev}
+      {:ex_doc, "~> 0.25.3", only: :dev},
+      {:benchee, "~> 1.1", only: :dev}
     ]
   end
 
