@@ -13,13 +13,11 @@ defmodule Tz.UpdatePeriodically do
   def start_link(_) do
     HTTP.get_http_client!()
 
-    GenServer.start_link(__MODULE__, %{})
+    GenServer.start_link(__MODULE__, [])
   end
 
-  def init(state) do
-    maybe_recompile()
-
-    {:ok, state}
+  def init(_opts) do
+    {:ok, %{}}
   end
 
   def handle_info(:work, state) do
