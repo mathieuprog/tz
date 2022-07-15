@@ -8,6 +8,7 @@ defmodule Tz.TimeZoneDatabase do
   @compile {:inline, period_to_map: 1}
 
   @impl true
+  # called by DateTime.shift_zone/3 and DateTime.add/4
   def time_zone_period_from_utc_iso_days(_, "Etc/UTC"),
       do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
 
@@ -19,6 +20,7 @@ defmodule Tz.TimeZoneDatabase do
   end
 
   @impl true
+  # called by DateTime.from_naive/3
   def time_zone_periods_from_wall_datetime(_, "Etc/UTC"),
       do: {:ok, %{utc_offset: 0, std_offset: 0, zone_abbr: "UTC"}}
 
