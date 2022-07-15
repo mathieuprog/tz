@@ -28,17 +28,18 @@ defmodule Tz.WatchPeriodically do
 
   def init(opts) do
     watch(opts[:on_update])
-    schedule_work()
+    schedule_work(opts[:interval_in_days])
     {:ok, %{opts: opts}}
   end
 
   def handle_info(:work, %{opts: opts}) do
     watch(opts[:on_update])
-    schedule_work()
+    schedule_work(opts[:interval_in_days])
     {:noreply, %{opts: opts}}
   end
 
-  defp schedule_work() do
-    Process.send_after(self(), :work, 24 * 60 * 60 * 1000) # In 24 hours
+  defp schedule_work(interval_in_days) do
+    interval_in_days = interval_in_days || 1
+    Process.send_after(self(), :work, interval_in_days * 24 * 60 * 60 * 1000)
   end
 end
