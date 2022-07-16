@@ -67,7 +67,7 @@ defmodule Tz.IanaDataDir do
 
     :ok = :erl_tar.extract(tmp_archive_path, [
       :compressed,
-      {:cwd, Path.join(dir(), tzdata_dir_name)},
+      {:cwd, Path.join(dir(), tzdata_dir_name) |> String.to_charlist()},
       {:files, files_to_extract}
     ])
 

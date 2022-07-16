@@ -247,8 +247,6 @@ defmodule Tz.PeriodsBuilder do
     end
   end
 
-  defp add_to_and_convert_date_tuple(:min, _, _, _), do: :min
-  defp add_to_and_convert_date_tuple(:max, _, _, _), do: :max
   defp add_to_and_convert_date_tuple({date, time_modifier}, add_seconds, std_offset_from_utc_time, local_offset_from_std_time) do
     date = NaiveDateTime.add(date, add_seconds, :second)
     convert_date_tuple({date, time_modifier}, std_offset_from_utc_time, local_offset_from_std_time)

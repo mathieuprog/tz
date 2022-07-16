@@ -8,8 +8,6 @@ defmodule Tz.Compiler do
   alias Tz.IanaFileParser
   alias Tz.PeriodsBuilder
 
-  @reject_periods_before_year Application.get_env(:tz, :reject_time_zone_periods_before_year)
-
   def compile() do
     IanaDataDir.maybe_copy_iana_files_to_custom_dir()
 
@@ -33,7 +31,7 @@ defmodule Tz.Compiler do
             periods =
               PeriodsBuilder.build_periods(zone_lines, rule_records)
               |> PeriodsBuilder.periods_to_tuples_and_reverse()
-              |> reject_periods_before_year(@reject_periods_before_year)
+              |> reject_periods_before_year()
 
             if length(periods) == 0 do
               raise "no periods for time zone #{zone_name}"
@@ -60,19 +58,23 @@ defmodule Tz.Compiler do
     compile_map_ongoing_changing_rules(ongoing_rules)
   end
 
-  defp reject_periods_before_year(periods, nil), do: periods
+  defp reject_periods_before_year(periods) do
+    case Application.get_env(:tz, :reject_time_zone_periods_before_year) do
+      nil ->
+        periods
 
-  defp reject_periods_before_year(periods, reject_before_year) do
-    filtered_periods =
-      Enum.reject(periods, fn {secs, _, _, _} ->
-        %{year: year} = gregorian_seconds_to_naive_datetime(secs)
-        year < reject_before_year
-      end)
+      reject_before_year ->
+        filtered_periods =
+          Enum.reject(periods, fn {secs, _, _, _} ->
+            %{year: year} = gregorian_seconds_to_naive_datetime(secs)
+            year < reject_before_year
+          end)
 
-    if length(filtered_periods) > 0 do
-      filtered_periods
-    else
-      periods
+        if length(filtered_periods) > 0 do
+          filtered_periods
+        else
+          periods
+        end
     end
   end
 
