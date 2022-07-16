@@ -36,12 +36,22 @@ To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supe
 {Tz.UpdatePeriodically, []}
 ```
 
+You may pass the option `:interval_in_days` in order to configure the frequency of the task.
+
+```elixir
+{Tz.UpdatePeriodically, [interval_in_days: 5]}
+```
+
 If you do not wish to update automatically, but still wish to be alerted for new upcoming IANA updates, add
 `Tz.WatchPeriodically` as a child in your supervisor:
 
 ```elixir
 {Tz.WatchPeriodically, []}
 ```
+
+You may pass the options:
+* `:interval_in_days`: frequency of the task
+* `:on_update`: a callback executed when an update is available
 
 This will simply log to your server when a new time zone database is available.
 
