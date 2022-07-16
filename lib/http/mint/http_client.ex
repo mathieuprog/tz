@@ -33,9 +33,6 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
             {:ok, http_response} ->
               recv_response(conn, http_response)
-
-            error ->
-              error
           end
       end
     end
