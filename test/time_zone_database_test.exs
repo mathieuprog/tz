@@ -89,6 +89,6 @@ defmodule TimeZoneDatabaseTest do
   end
 
   test "version" do
-    assert "2022a" == Tz.iana_version()
+    assert "2022c" == Tz.iana_version()
   end
 end
