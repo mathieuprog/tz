@@ -1,7 +1,7 @@
 defmodule Tz.IanaDataDir do
   @regex_tzdata_dir_name ~r/^tzdata20[0-9]{2}[a-z]$/
 
-  defp dir(), do: Application.get_env(:tz, :data_dir) || :code.priv_dir(:tz)
+  def dir(), do: Application.get_env(:tz, :data_dir) || :code.priv_dir(:tz)
 
   def tzdata_dir_name(parent_dir \\ dir()) do
     tz_data_dirs =
@@ -45,8 +45,8 @@ defmodule Tz.IanaDataDir do
     end
   end
 
-  def extract_tzdata_into_dir(version, content) do
-    tmp_archive_path = Path.join(dir(), "tzdata#{version}.tar.gz")
+  def extract_tzdata_into_dir(version, content, dir \\ dir()) do
+    tmp_archive_path = Path.join(dir, "tzdata#{version}.tar.gz")
     tzdata_dir_name = "tzdata#{version}"
     :ok = File.write!(tmp_archive_path, content)
 
@@ -66,7 +66,7 @@ defmodule Tz.IanaDataDir do
 
     :ok = :erl_tar.extract(tmp_archive_path, [
       :compressed,
-      {:cwd, Path.join(dir(), tzdata_dir_name) |> String.to_charlist()},
+      {:cwd, Path.join(dir, tzdata_dir_name) |> String.to_charlist()},
       {:files, files_to_extract}
     ])
 

@@ -8,7 +8,7 @@ defmodule Tz.WatchPeriodically do
   defp watch(on_update_callback) do
     Logger.debug("Tz is checking for IANA time zone database updates")
 
-    case Updater.fetch_iana_tz_version() do
+    case Updater.fetch_latest_iana_tz_version() do
       {:ok, latest_version} ->
         if latest_version != PeriodsProvider.iana_version() do
           link = "https://data.iana.org/time-zones/releases/tzdata#{latest_version}.tar.gz"
