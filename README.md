@@ -82,6 +82,12 @@ For updating manually, there are two options:
      ```bash
      mix deps.compile tz --force
      ```
+     Or from an iex session to recompile at runtime:
+     ```bash
+     iex -S mix
+     iex(1)> Tz.Compiler.compile()
+     ```
+     Note that recompilation at runtime is not persistent, run `mix deps.compile tz --force` in addition.
 
 To avoid the updater to run while executing tests, you may conditionally add the child worker in your supervisor. For example:
 
