@@ -88,6 +88,10 @@ For updating manually, there are two options:
      iex(1)> Tz.Compiler.compile()
      ```
      Note that recompilation at runtime is not persistent, run `mix deps.compile tz --force` in addition.
+  4. Check that the version is the one expected:
+     ```bash
+     iex(2)> Tz.iana_version()
+     ```
 
 To avoid the updater to run while executing tests, you may conditionally add the child worker in your supervisor. For example:
 
