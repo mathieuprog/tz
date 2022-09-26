@@ -32,7 +32,7 @@ defmodule Tz.Updater do
           Logger.info("Tz is downloading the IANA time zone database (version #{latest_version})...")
           case update_tz_database(latest_version) do
             {:ok, dir} ->
-              Logger.info("Tz download done (into #{dir}")
+              Logger.info("Tz download done (into #{dir})")
               IanaDataDir.delete_tzdata_dir(latest_version_saved)
               {:updated, latest_version}
 
