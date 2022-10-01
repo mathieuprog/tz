@@ -60,7 +60,8 @@ defmodule Tz.Updater do
     end
   end
 
-  def update_tz_database(version, dir \\ IanaDataDir.dir()) do
+  def update_tz_database(version, dir \\ IanaDataDir.dir())
+      when is_binary(version) and is_binary(dir) do
     case download_tz_database(version) do
       {:ok, content} ->
         IanaDataDir.extract_tzdata_into_dir(version, content, dir)

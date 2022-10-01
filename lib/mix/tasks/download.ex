@@ -1,11 +1,14 @@
 defmodule Mix.Tasks.Tz.Download do
   use Mix.Task
 
+  alias Tz.IanaDataDir
   alias Tz.Updater
 
   @shortdoc "Downloads the IANA time zone data."
   def run(command_line_args) do
     {version, dir} = command_line_args(command_line_args)
+
+    dir = dir || IanaDataDir.dir()
 
     case Updater.update_tz_database(version, dir) do
       :error ->
