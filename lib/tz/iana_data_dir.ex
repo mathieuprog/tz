@@ -1,7 +1,7 @@
 defmodule Tz.IanaDataDir do
   @regex_tzdata_dir_name ~r/^tzdata20[0-9]{2}[a-z]$/
 
-  def dir(), do: Application.get_env(:tz, :data_dir) || :code.priv_dir(:tz)
+  def dir(), do: Application.get_env(:tz, :data_dir) || to_string(:code.priv_dir(:tz))
 
   def tzdata_dir_name(parent_dir \\ dir()) do
     tz_data_dirs =
@@ -33,11 +33,11 @@ defmodule Tz.IanaDataDir do
       tzdata_version() ->
         nil
 
-      :code.priv_dir(:tz) == dir() ->
+      to_string(:code.priv_dir(:tz)) == dir() ->
         raise "tzdata files not found"
 
       true ->
-        if dir_name = tzdata_dir_name(:code.priv_dir(:tz)) do
+        if dir_name = tzdata_dir_name(to_string(:code.priv_dir(:tz))) do
           File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
         else
           raise "tzdata files not found"
