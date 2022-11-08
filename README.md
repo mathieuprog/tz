@@ -183,7 +183,7 @@ about handling datetimes with time zones.
 You can decrease **compilation time**, by rejecting time zone periods before a given year:
 
 ```elixir
-config :tz, reject_time_zone_periods_before_year: 2010
+config :tz, reject_periods_before_year: 2010
 ```
 
 By default, no periods are rejected.
@@ -198,7 +198,7 @@ You can decrease **period lookup time** for such periods lookups, by specifying 
 computed:
 
 ```elixir
-config :tz, build_time_zone_periods_with_ongoing_dst_changes_until_year: 20 + NaiveDateTime.utc_now().year
+config :tz, build_dst_periods_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
 Note that increasing the year will also slightly increase compilation time, as it will generate more periods to compile.

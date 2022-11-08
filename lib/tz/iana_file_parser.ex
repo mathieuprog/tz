@@ -2,7 +2,7 @@ defmodule Tz.IanaFileParser do
   @moduledoc false
   # https://data.iana.org/time-zones/tzdb/tz-how-to.html
 
-  @build_periods_with_ongoing_dst_changes_until_year Application.compile_env(:tz, :build_time_zone_periods_with_ongoing_dst_changes_until_year, 5 + NaiveDateTime.utc_now().year)
+  @build_dst_periods_until_year Application.compile_env(:tz, :build_dst_periods_until_year, 5 + NaiveDateTime.utc_now().year)
 
   def parse(file_path) do
     records =
@@ -19,7 +19,7 @@ defmodule Tz.IanaFileParser do
 
     {
       denormalized_zone_data(zones),
-      denormalized_rule_data(rules, @build_periods_with_ongoing_dst_changes_until_year),
+      denormalized_rule_data(rules, @build_dst_periods_until_year),
       links,
       Enum.filter(rules, & &1.ongoing_switch)
       |> Enum.group_by(& &1.name)
@@ -408,12 +408,12 @@ defmodule Tz.IanaFileParser do
     end).()
   end
 
-  def denormalized_rule_data(rule_records, build_periods_with_ongoing_dst_changes_until_year \\ 0) do
+  def denormalized_rule_data(rule_records, build_dst_periods_until_year \\ 0) do
     rule_records
     |> Enum.group_by(& &1.name)
     |> (fn rules_by_name ->
       rules_by_name
-      |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, build_periods_with_ongoing_dst_changes_until_year)} end)
+      |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, build_dst_periods_until_year)} end)
       |> Enum.into(%{})
     end).()
   end
@@ -430,7 +430,7 @@ defmodule Tz.IanaFileParser do
     end)
   end
 
-  defp denormalize_rules(rules, build_periods_with_ongoing_dst_changes_until_year) do
+  defp denormalize_rules(rules, build_dst_periods_until_year) do
     ongoing_switch_rules = Enum.filter(rules, & &1.ongoing_switch)
 
     rules =
@@ -439,7 +439,7 @@ defmodule Tz.IanaFileParser do
           rules
         [rule1, rule2] ->
           last_year = Enum.max([
-            build_periods_with_ongoing_dst_changes_until_year,
+            build_dst_periods_until_year,
             elem(rule1.from, 0).year,
             elem(rule2.from, 0).year
           ])

@@ -59,7 +59,7 @@ defmodule Tz.Compiler do
   end
 
   defp reject_periods_before_year(periods) do
-    case Application.get_env(:tz, :reject_time_zone_periods_before_year) do
+    case Application.get_env(:tz, :reject_periods_before_year) do
       nil ->
         periods
 
