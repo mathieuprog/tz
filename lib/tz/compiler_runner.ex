@@ -3,7 +3,7 @@ defmodule Tz.CompilerRunner do
 
   all_env = Application.get_all_env(:tz)
 
-  known_env =
+  known_env_keys =
     [
       :data_dir,
       :http_client,
@@ -11,10 +11,12 @@ defmodule Tz.CompilerRunner do
       :build_time_zone_periods_with_ongoing_dst_changes_until_year
     ]
 
-  unknown_env = Keyword.drop(all_env, known_env)
+  unknown_env_keys =
+    Keyword.drop(all_env, known_env_keys)
+    |> Keyword.keys()
 
-  if (unknown_env != []) do
-    raise "possible options are #{Enum.join(unknown_env, ", ")}"
+  if (unknown_env_keys != []) do
+    raise "possible options are #{Enum.join(unknown_env_keys, ", ")}"
   end
 
   require Tz.Compiler
