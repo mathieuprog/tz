@@ -1,3 +1,6 @@
+# asdf
+.tool-versions
+
 # IntelliJ IDEA
 /.idea/
 *.iml
