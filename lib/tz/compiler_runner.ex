@@ -16,7 +16,12 @@ defmodule Tz.CompilerRunner do
     |> Keyword.keys()
 
   if (unknown_env_keys != []) do
-    raise "possible options are #{Enum.join(unknown_env_keys, ", ")}"
+    joined_known_env_keys =
+      known_env_keys
+      |> Enum.map(& ":#{to_string(&1)}")
+      |> Enum.join(", ")
+
+    raise "possible options are #{joined_known_env_keys}"
   end
 
   require Tz.Compiler
