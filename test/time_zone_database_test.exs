@@ -89,6 +89,6 @@ defmodule TimeZoneDatabaseTest do
   end
 
   test "version" do
-    assert "2022c" == Tz.iana_version()
+    assert Regex.match?(~r/202[2-9][a-z]/, Tz.iana_version())
   end
 end
