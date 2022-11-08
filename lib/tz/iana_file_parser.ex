@@ -2,7 +2,7 @@ defmodule Tz.IanaFileParser do
   @moduledoc false
   # https://data.iana.org/time-zones/tzdb/tz-how-to.html
 
-  @build_periods_with_ongoing_dst_changes_until_year Application.get_env(:tz, :build_time_zone_periods_with_ongoing_dst_changes_until_year, 5 + NaiveDateTime.utc_now().year)
+  @build_periods_with_ongoing_dst_changes_until_year Application.compile_env(:tz, :build_time_zone_periods_with_ongoing_dst_changes_until_year, 5 + NaiveDateTime.utc_now().year)
 
   def parse(file_path) do
     records =

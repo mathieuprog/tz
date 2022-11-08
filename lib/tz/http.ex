@@ -1,24 +1,16 @@
 defmodule Tz.HTTP do
   http_client =
-    case Application.fetch_env(:tz, :http_client) do
-      {:ok, http_client} ->
-        http_client
+    if http_client = Application.compile_env(:tz, :http_client) do
+      http_client
+    else
+      unless Code.ensure_loaded?(Mint.HTTP) do
+        raise "No HTTP client found. Add `:mint` as a dependency, or pass a custom HTTP client to the config."
+      end
 
-      :error ->
-        cond do
-          Code.ensure_loaded?(Mint.HTTP) ->
-            Tz.HTTP.Mint.HTTPClient
-
-          true ->
-            nil
-        end
+      Tz.HTTP.Mint.HTTPClient
     end
 
   def get_http_client!() do
-    if unquote(http_client) do
-      unquote(http_client)
-    else
-      raise "No HTTP client found. Add `:mint` as a dependency, or pass a custom HTTP client to the config."
-    end
+    unquote(http_client)
   end
 end
