@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.24.x
+
+* Handle negative years
+* Convert non-iso datetime to iso
+
 ## 0.23.x
 
 * Fix warnings
