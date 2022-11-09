@@ -255,10 +255,18 @@ around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_ex
 * [`TzExtra.Changeset.validate_civil_time_zone_identifier/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_civil_time_zone_identifier3): an Ecto Changeset validator, validating that the user input is a valid civil time zone
 * [`TzExtra.Changeset.validate_iso_country_code/3`](https://github.com/mathieuprog/tz_extra#tzextraChangesetvalidate_iso_country_code3): an Ecto Changeset validator, validating that the user input is a valid ISO country code
 
-## Other IANA time zone database implementations
+## Other time zone database implementations
 
-* https://github.com/hrzndhrn/time_zone_info
-* https://github.com/lau/tzdata (not recommended due to bugs)
+### Based on IANA time zone data
+
+* [time_zone_info](https://github.com/hrzndhrn/time_zone_info)
+* [tzdata](https://github.com/lau/tzdata) (not recommended due to bugs)
+
+### Based on OS-supplied zoneinfo files
+
+Recommended for embedded devices.
+
+* [zoneinfo](https://github.com/smartrent/zoneinfo)
 
 ## Installation
 
