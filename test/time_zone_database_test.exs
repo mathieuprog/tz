@@ -1,6 +1,8 @@
 defmodule TimeZoneDatabaseTest do
   use ExUnit.Case
 
+  alias Support.HoloceneCalendar
+
   test "naive date for time zone" do
     naive_date_time = ~N[2018-07-28 12:30:00]
     time_zone = "Europe/Copenhagen"
@@ -116,5 +118,12 @@ defmodule TimeZoneDatabaseTest do
     naive_datetime = NaiveDateTime.new!(-1, 1, 1, 0, 0, 0, {0, 6})
     assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
     assert {:ok, belgian_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Europe/Brussels")
+  end
+
+  test "convert non-iso datetime to iso" do
+    non_iso_datetime = NaiveDateTime.convert!(~N[2000-01-01 13:30:15], HoloceneCalendar)
+
+    assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Etc/UTC")
+    assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Europe/Brussels")
   end
 end
