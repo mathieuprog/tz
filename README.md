@@ -134,8 +134,9 @@ To avoid the updater to run while executing tests, you may conditionally add the
 
 ```elixir
 children = [
-  MyApp.RepoBase,
+  MyApp.Repo,
   MyApp.Endpoint,
+  #...
 ]
 |> append_if(Application.get_env(:my_app, :env) != :test, {Tz.UpdatePeriodically, []})
 ```
