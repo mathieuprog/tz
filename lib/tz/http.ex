@@ -8,6 +8,9 @@ defmodule Tz.HTTP do
       end
     end
 
+  @doc """
+  Return the http client module configured for tz.
+  """
   def get_http_client!() do
     unless unquote(http_client) do
       raise "No HTTP client found. Add `:mint` as a dependency, or pass a custom HTTP client to the config."

@@ -1,4 +1,6 @@
 defmodule Tz.IanaDataDir do
+  @moduledoc false
+
   @regex_tzdata_dir_name ~r/^tzdata20[0-9]{2}[a-z]$/
 
   def dir(), do: Application.get_env(:tz, :data_dir) || to_string(:code.priv_dir(:tz))

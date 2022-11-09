@@ -1,4 +1,8 @@
 defmodule Tz.WatchPeriodically do
+  @moduledoc """
+  A process watching for IANA data updates periodically.
+  """
+
   use GenServer
   require Logger
   alias Tz.HTTP
@@ -20,18 +24,21 @@ defmodule Tz.WatchPeriodically do
     end
   end
 
+  @doc false
   def start_link(opts) do
     HTTP.get_http_client!()
 
     GenServer.start_link(__MODULE__, opts)
   end
 
+  @doc false
   def init(opts) do
     watch(opts[:on_update])
     schedule_work(opts[:interval_in_days])
     {:ok, %{opts: opts}}
   end
 
+  @doc false
   def handle_info(:work, %{opts: opts}) do
     watch(opts[:on_update])
     schedule_work(opts[:interval_in_days])
