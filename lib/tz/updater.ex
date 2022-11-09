@@ -1,6 +1,4 @@
 defmodule Tz.Updater do
-  @moduledoc false
-
   require Logger
 
   alias Tz.Compiler
@@ -9,6 +7,9 @@ defmodule Tz.Updater do
   alias Tz.IanaDataDir
   alias Tz.PeriodsProvider
 
+  @doc """
+  Recompiles the period maps only if more recent IANA data is available.
+  """
   def maybe_recompile() do
     IanaDataDir.maybe_copy_iana_files_to_custom_dir()
 
@@ -50,6 +51,7 @@ defmodule Tz.Updater do
     end
   end
 
+  @doc false
   def fetch_latest_iana_tz_version() do
     case HTTP.get_http_client!().request("data.iana.org", "/time-zones/tzdb/version") do
       %HTTPResponse{body: body, status_code: 200} ->
@@ -60,6 +62,7 @@ defmodule Tz.Updater do
     end
   end
 
+  @doc false
   def update_tz_database(version, dir \\ IanaDataDir.dir())
       when is_binary(version) and is_binary(dir) do
     case download_tz_database(version) do
