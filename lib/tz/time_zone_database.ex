@@ -119,9 +119,17 @@ defmodule Tz.TimeZoneDatabase do
     div(days * 86_400_000_000 + parts_in_day, 1_000_000)
   end
 
-  defp naive_datetime_to_gregorian_seconds(datetime) do
+  defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO, year: year}) when year < 0, do: 0
+
+  defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO} = datetime) do
     NaiveDateTime.to_erl(datetime)
     |> :calendar.datetime_to_gregorian_seconds()
+  end
+
+  defp naive_datetime_to_gregorian_seconds(datetime) do
+    datetime
+    |> NaiveDateTime.convert!(Calendar.ISO)
+    |> naive_datetime_to_gregorian_seconds()
   end
 
   defp gregorian_seconds_to_naive_datetime(seconds) do

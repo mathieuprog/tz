@@ -106,8 +106,6 @@ defmodule TimeZoneDatabaseTest do
 
     iso_days = Calendar.ISO.naive_datetime_to_iso_days(-1, 1, 1, 0, 0, 0, {0, 6})
     assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Etc/UTC")
-
-    Calendar.naive_datetime_from_iso_days(Calendar.ISO.naive_datetime_to_iso_days(-1, 1, 1, 0, 0, 0, {0, 6}))
   end
 
   test "time_zone_periods_from_wall_datetime with Etc/UTC" do
@@ -124,7 +122,5 @@ defmodule TimeZoneDatabaseTest do
 
     naive_datetime = NaiveDateTime.new!(-1, 1, 1, 0, 0, 0, {0, 6})
     assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
-
-    Calendar.naive_datetime_from_iso_days(Calendar.ISO.naive_datetime_to_iso_days(-1, 1, 1, 0, 0, 0, {0, 6}))
   end
 end
