@@ -42,6 +42,10 @@ defmodule Tz.TimeZoneDatabase do
 
       {_, {utc_off, _, _}, _, rules_and_template} ->
         {:max, utc_off, rules_and_template}
+
+      nil ->
+        {_, period, _, _} = List.last(periods)
+        {:ok, period_to_map(period)}
     end
   end
 
