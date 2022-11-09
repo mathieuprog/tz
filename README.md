@@ -91,15 +91,6 @@ You may pass the options:
 * `:interval_in_days`: frequency of the checks
 * `:on_update`: a user callback executed when an update is available
 
-## Automatic vs manual updates
-
-Some users prefer to use `Tz.WatchPeriodically` (over `Tz.UpdatePeriodically`) to watch and update manually. Example cases:
-
-* Dealing with memory limitations: some embedded devices may not afford to recompile the time zone data at runtime.
-* Restricted environments: the request may be blocked because of security policies.
-* Security concerns: some users may prefer to analyze the files coming from external sources (`https://data.iana.org` in this case) before processing.
-* Systems interoperability: a user may use some other systems using an older version of the IANA database, and  so the user may want to keep a lower version of the IANA data with `tz` to ensure IANA versions match.
-
 For updating IANA data manually, there are 2 options:
 
 * just update the `tz` library in the `mix.exs` file, which hopefully includes the latest IANA time zone database (if not, wait for the library maintainer to include the latest version or send a pull request on GitHub).
@@ -130,6 +121,15 @@ For updating IANA data manually, there are 2 options:
      ```bash
      iex(2)> Tz.iana_version()
      ```
+
+## Automatic vs manual updates
+
+Some users prefer to use `Tz.WatchPeriodically` (over `Tz.UpdatePeriodically`) to watch and update manually. Example cases:
+
+* Dealing with memory limitations: some embedded devices may not afford to recompile the time zone data at runtime.
+* Restricted environments: the request may be blocked because of security policies.
+* Security concerns: some users may prefer to analyze the files coming from external sources (`https://data.iana.org` in this case) before processing.
+* Systems interoperability: a user may use some other systems using an older version of the IANA database, and  so the user may want to keep a lower version of the IANA data with `tz` to ensure IANA versions match.
 
 ## Disable updates in test environment
 
