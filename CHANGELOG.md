@@ -1,4 +1,15 @@
 # Changelog
+
+## 0.23.x
+
+* Fix warnings
+* Change option names:
+  * `:reject_time_zone_periods_before_year` to<br>
+    `:reject_periods_before_year`
+  * `:build_time_zone_periods_with_ongoing_dst_changes_until_year` to<br>
+    `:build_dst_periods_until_year`
+
+* Add a mix task to download the IANA time zone data for a given version
 ## 0.22.x
 
 * Add a mix task to download the IANA time zone data for a given version
