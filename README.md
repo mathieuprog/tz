@@ -14,6 +14,7 @@ The `tz` library relies on the [time zone database](https://data.iana.org/time-z
 * [Core principles](#core-principles)
 * [Automatic updates](#automatic-time-zone-data-updates)
 * [Manual updates](#manual-time-zone-data-updates)
+* [Disable updates in test env](#disable-updates-in-test-environment)
 * [Automatic vs manual updates](#automatic-vs-manual-updates)
 * [Default HTTP client](#default-http-client)
 * [Custom HTTP client](#custom-http-client)
@@ -129,6 +130,8 @@ For updating IANA data manually, there are 2 options:
      ```bash
      iex(2)> Tz.iana_version()
      ```
+
+## Disable updates in test environment
 
 To avoid the updater to run while executing tests, you may conditionally add the child worker in your supervisor. For example:
 
