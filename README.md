@@ -10,23 +10,56 @@ third-party libraries, such as `tz`, to bring in time zone support and deal with
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
 [IANA](https://www.iana.org). As of version 0.23.0, `tz` uses version **tzdata2022f** of the IANA time zone database.
 
-## Features
+* [Usage](#usage)
+* [Core principles](#core-principles)
+* [Automatic updates](#automatic-time-zone-data-updates)
+* [Manual updates](#manual-time-zone-data-updates)
+* [Automatic vs manual updates](#automatic-vs-manual-updates)
+* [Default HTTP client](#default-http-client)
+* [Custom HTTP client](#custom-http-client)
+* [Performance tweaks](#performance-tweaks)
+* [Custom storage location](#custom-storage-location-of-time-zone-data)
+* [Get the IANA version](#get-the-iana-time-zone-database-version)
+* [Time zone utility functions](#time-zone-utility-functions)
+* [Other libraries](#other-iana-time-zone-database-implementations)
+* [Installation](#installation)
+
+## Usage
+
+To use the `tz` database, either configure it via configuration:
+```elixir
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+```
+
+or by calling `Calendar.put_time_zone_database/1`:
+```elixir
+Calendar.put_time_zone_database(Tz.TimeZoneDatabase)
+```
+
+or by passing the module name `Tz.TimeZoneDatabase` directly to the functions that need a time zone database:
+```elixir
+DateTime.now("America/Sao_Paulo", Tz.TimeZoneDatabase)
+```
+
+Refer to the [DateTime API](https://hexdocs.pm/elixir/DateTime.html) for more details
+about handling datetimes with time zones.
+
+## Core principles
 
 ### Battle-tested
 
-The `tz` library is tested against nearly 10 million past dates, which includes most of all possible imaginable
-edge cases.
+The `tz` library is tested against nearly 10 million past dates, which includes most of all possible imaginable edge cases.
 
 ### Pre-compiled time zone data
 
 Time zone periods are deducted from the [IANA time zone data](https://data.iana.org/time-zones/tzdb/). A period is a
-period of time where a certain offset is observed. Example: in Belgium, from 31 March 2019 until 27 October 2019, clock
-went forward by 1 hour; this means that during this period, Belgium observed a total offset of 2 hours from UTC time.
+period of time where a certain offset is observed. For example, in Belgium from 31 March 2019 until 27 October 2019, clock
+went forward by 1 hour; as Belgium has a base UTC offset of 1 hour, this means that during this period, Belgium observed a total offset of 2 hours from UTC time.
 
 The time zone periods are computed and made available in Elixir maps during compilation time, to be consumed by the
 [DateTime](https://hexdocs.pm/elixir/DateTime.html#module-time-zone-database) module.
 
-### Automatic time zone data updates
+## Automatic time zone data updates
 
 `tz` can watch for IANA time zone database updates and automatically recompile the time zone periods.
 
@@ -36,7 +69,9 @@ To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supe
 {Tz.UpdatePeriodically, []}
 ```
 
-You may pass the option `:interval_in_days` in order to configure the frequency of the task.
+## Manual time zone data updates
+
+You may pass the option `:interval_in_days` in order to configure the frequency of the updates.
 
 ```elixir
 {Tz.UpdatePeriodically, [interval_in_days: 5]}
@@ -49,27 +84,29 @@ If you do not wish to update automatically, but still wish to be alerted for new
 {Tz.WatchPeriodically, []}
 ```
 
+`Tz.WatchPeriodically` simply logs to your server when a new time zone database is available.
+
 You may pass the options:
-* `:interval_in_days`: frequency of the task
-* `:on_update`: a callback executed when an update is available
+* `:interval_in_days`: frequency of the checks
+* `:on_update`: a user callback executed when an update is available
 
-This will simply log to your server when a new time zone database is available.
+## Automatic vs manual updates
 
-Some users prefer to watch and update manually. Example cases:
+Some users prefer to use `Tz.WatchPeriodically` (over `Tz.UpdatePeriodically`) to watch and update manually. Example cases:
 
 * Dealing with memory limitations: some embedded devices may not afford to recompile the time zone data at runtime.
 * Restricted environments: the request may be blocked because of security policies.
-* Security concerns: some users may prefer to analyze the files coming from external sources (`data.iana.org` in this case) before processing.
-* Systems interoperability: some other systems may use other versions of the IANA database.
+* Security concerns: some users may prefer to analyze the files coming from external sources (`https://data.iana.org` in this case) before processing.
+* Systems interoperability: a user may use some other systems using an older version of the IANA database, and  so the user may want to keep a lower version of the IANA data with `tz` to ensure IANA versions match.
 
-For updating manually, there are two options:
+For updating IANA data manually, there are 2 options:
 
-* just update the `tz` library which hopefully includes the latest IANA time zone database (if not, wait for the library maintainer to include the latest version, or send a PR, ...).
+* just update the `tz` library in the `mix.exs` file, which hopefully includes the latest IANA time zone database (if not, wait for the library maintainer to include the latest version or send a pull request on GitHub).
 
 * download the files and recompile:
 
   1. Configure a custom  directory with the `:data_dir` option.
-  2. Download the files manually running the mix task below:
+  2. Download the files manually by running the mix task below:
      ```bash
      mix tz.download
      ```
@@ -77,7 +114,7 @@ For updating manually, there are two options:
      ```bash
      mix tz.download 2021a
      ```
-     In that case delete more recent versions from the folder.
+     I you want to install a specific version, ensure to delete more recent versions from the folder.
   3. Recompile the dependency:
      ```bash
      mix deps.compile tz --force
@@ -111,6 +148,8 @@ end
 
 In `config.exs`, add `config :my_app, env: Mix.env()`.
 
+## Default HTTP client
+
 Lastly, add the http client `mint` and ssl certificate store `castore` into your `mix.exs` file:
 
 ```elixir
@@ -123,7 +162,7 @@ defp deps do
 end
 ```
 
-### Custom HTTP client
+## Custom HTTP client
 
 You may implement the `Tz.HTTP.HTTPClient` behaviour in order to use another HTTP client.
 
@@ -156,54 +195,39 @@ The custom module must then be passed into the config:
 config :tz, :http_client, MyApp.Tz.HTTPClient
 ```
 
-## Usage
-
-To use the `tz` database, either configure it via configuration:
-```elixir
-config :elixir, :time_zone_database, Tz.TimeZoneDatabase
-```
-
-or by calling `Calendar.put_time_zone_database/1`:
-```elixir
-Calendar.put_time_zone_database(Tz.TimeZoneDatabase)
-```
-
-or by passing the module name `Tz.TimeZoneDatabase` directly to the functions that need a time zone database:
-```elixir
-DateTime.now("America/Sao_Paulo", Tz.TimeZoneDatabase)
-```
-
-Refer to the [DateTime API](https://hexdocs.pm/elixir/DateTime.html) for more details
-about handling datetimes with time zones.
-
 ## Performance tweaks
 
-`tz` provides two environment options to tweak performance.
+`tz` accepts two environment options to tweak performance.
 
-You can decrease **compilation time**, by rejecting time zone periods before a given year:
+### Reducing period lookup time
 
-```elixir
-config :tz, reject_periods_before_year: 2010
-```
-
-By default, no periods are rejected.
-
-For time zones that have ongoing DST changes, period lookups for dates far in the future will result in periods being
+For time zones that have ongoing DST changes, period lookups for dates far in the future result in periods being
 dynamically computed based on the IANA data. For example, what is the period for 20 March 2040 for New York (let's
 assume that the last rules for New York still mention an ongoing DST change as you read this)? We can't compile periods
 indefinitely in the future; by default, such periods are computed until 5 years from compilation time. Dynamic period
 computations is a slow operation.
 
-You can decrease **period lookup time** for such periods lookups, by specifying until what year those periods have to be
-computed:
+You can decrease **period lookup time** for time zones affected by DST changes, by specifying until what year those periods have to be computed:
 
 ```elixir
 config :tz, build_dst_periods_until_year: 20 + NaiveDateTime.utc_now().year
 ```
 
-Note that increasing the year will also slightly increase compilation time, as it will generate more periods to compile.
+Note that increasing the year will also slightly increase compilation time, as it generates more periods to compile.
 
-## Custom storage location of time zone files
+### Rejecting old time zone periods
+
+You can slightly decrease **memory usage** and **compilation time**, by rejecting time zone periods before a given year:
+
+```elixir
+config :tz, reject_periods_before_year: 2010
+```
+
+Note that this option is aimed towards embedded devices as the difference should be insignificant for ordinary servers.
+
+By default, no periods are rejected.
+
+## Custom storage location of time zone data
 
 By default, the files are stored in the `priv` directory of the `tz` library. You may customize the directory that will hold all of the IANA timezone data. For example, if you want to store the files in your project's `priv` dir instead:
 
@@ -247,7 +271,3 @@ def deps do
   ]
 end
 ```
-
-## HexDocs
-
-HexDocs documentation can be found at [https://hexdocs.pm/tz](https://hexdocs.pm/tz).
