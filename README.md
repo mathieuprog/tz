@@ -106,7 +106,7 @@ For updating IANA data manually, there are 2 options:
      ```bash
      mix tz.download 2021a
      ```
-     I you want to install a specific version, ensure to delete more recent versions from the folder.
+     If you want to install a specific version, ensure to delete more recent versions from the folder.
   3. Recompile the dependency:
      ```bash
      mix deps.compile tz --force
