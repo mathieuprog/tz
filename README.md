@@ -56,7 +56,7 @@ The `tz` library is tested against nearly 10 million past dates, which includes 
 
 Time zone periods are deducted from the [IANA time zone data](https://data.iana.org/time-zones/tzdb/). A period is a
 period of time where a certain offset is observed. For example, in Belgium from 31 March 2019 until 27 October 2019, clock
-went forward by 1 hour; as Belgium has a base UTC offset of 1 hour, this means that during this period, Belgium observed a total offset of 2 hours from UTC time.
+went forward by 1 hour; as Belgium has a base offset from UTC of 1 hour, this means that during this period, Belgium observed a total offset of 2 hours from UTC time (base UTC offset of 1 hour + DST offset of 1 hour).
 
 The time zone periods are computed and made available in Elixir maps during compilation time, to be consumed by the
 [DateTime](https://hexdocs.pm/elixir/DateTime.html#module-time-zone-database) module.
