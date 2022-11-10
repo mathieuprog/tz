@@ -22,7 +22,7 @@ The `tz` library relies on the [time zone database](https://data.iana.org/time-z
 * [Custom storage location](#custom-storage-location-of-time-zone-data)
 * [Get the IANA version](#get-the-iana-time-zone-database-version)
 * [Time zone utility functions](#time-zone-utility-functions)
-* [Other libraries](#other-iana-time-zone-database-implementations)
+* [Other libraries](#other-time-zone-database-implementations)
 * [Installation](#installation)
 * [Acknowledgments](#acknowledgments)
 
