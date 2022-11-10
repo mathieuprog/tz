@@ -126,7 +126,7 @@ For updating IANA data manually, there are 2 options:
 
 Some users prefer to use `Tz.WatchPeriodically` (over `Tz.UpdatePeriodically`) to watch and update manually. Example cases:
 
-* Dealing with memory limitations: some embedded devices may not afford to recompile the time zone data at runtime.
+* Memory-limited systems: small containers or embedded devices may not afford to recompile the time zone data at runtime.
 * Restricted environments: the request may be blocked because of security policies.
 * Security concerns: some users may prefer to analyze the files coming from external sources (`https://data.iana.org` in this case) before processing.
 * Systems interoperability: a user may use some other systems using an older version of the IANA database, and  so the user may want to keep a lower version of the IANA data with `tz` to ensure IANA versions match.
