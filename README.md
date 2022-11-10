@@ -24,6 +24,7 @@ The `tz` library relies on the [time zone database](https://data.iana.org/time-z
 * [Time zone utility functions](#time-zone-utility-functions)
 * [Other libraries](#other-iana-time-zone-database-implementations)
 * [Installation](#installation)
+* [Acknowledgments](#acknowledgments)
 
 ## Usage
 
