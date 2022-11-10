@@ -289,6 +289,6 @@ end
 
 The current state of Tz wouldn't have been possible to achieve without the work of the following contributors related to time zones:
 
-* contributors adding time zone support to Elixir ([call for proposal](https://elixirforum.com/t/14743), [initial proposal](https://github.com/elixir-lang/elixir/pull/7914), [final proposal](https://github.com/elixir-lang/elixir/pull/8383)).
-* contributors to the [time_zone_info](https://github.com/hrzndhrn/time_zone_info) library, based on which Tz could compare its speed and drastically improve performance.
+* contributors adding time zone support to Elixir ([call for proposal](https://elixirforum.com/t/14743), [initial proposal](https://github.com/elixir-lang/elixir/pull/7914), [final proposal](https://github.com/elixir-lang/elixir/pull/8383));
+* contributors to the [time_zone_info](https://github.com/hrzndhrn/time_zone_info) library, based on which Tz could compare its speed and drastically improve performance;
 * contributors to the Java `java.time` package, against which Tz is testing its output.
