@@ -50,7 +50,9 @@ about handling datetimes with time zones.
 
 ### Battle-tested
 
-The `tz` library is tested against nearly 10 million past dates, which includes most of all possible imaginable edge cases.
+The `tz` library is tested against nearly 10 million past dates, which includes most of all possible edge cases.
+
+The repo [tzdb_test](https://github.com/mathieuprog/tzdb_test) compares the output of the different available libraries (tz, time_zone_info, tzdata and zoneinfo), and gives some idea of the difference in performance.
 
 ### Pre-compiled time zone data
 
