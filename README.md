@@ -10,7 +10,7 @@ third-party libraries, such as `tz`, to bring in time zone support and deal with
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
 [IANA](https://www.iana.org). As of version 0.24.0, `tz` uses version **tzdata2022f** of the IANA time zone database.
 
-* [Usage](#usage)
+* [Installation and usage](#installation-and-usage)
 * [Core principles](#core-principles)
 * [Automatic updates](#automatic-time-zone-data-updates)
 * [Manual updates](#manual-time-zone-data-updates)
@@ -23,10 +23,19 @@ The `tz` library relies on the [time zone database](https://data.iana.org/time-z
 * [Get the IANA version](#get-the-iana-time-zone-database-version)
 * [Time zone utility functions](#time-zone-utility-functions)
 * [Other libraries](#other-time-zone-database-implementations)
-* [Installation](#installation)
 * [Acknowledgments](#acknowledgments)
 
-## Usage
+## Installation and usage
+
+Add `tz` for Elixir as a dependency in your `mix.exs` file:
+
+```elixir
+def deps do
+  [
+    {:tz, "~> 0.24.0"}
+  ]
+end
+```
 
 To use the `tz` database, either configure it via configuration:
 ```elixir
@@ -274,18 +283,6 @@ around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_ex
 Recommended for embedded devices.
 
 * [zoneinfo](https://github.com/smartrent/zoneinfo)
-
-## Installation
-
-Add `tz` for Elixir as a dependency in your `mix.exs` file:
-
-```elixir
-def deps do
-  [
-    {:tz, "~> 0.24.0"}
-  ]
-end
-```
 
 ## Acknowledgments
 
