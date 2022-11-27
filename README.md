@@ -109,7 +109,7 @@ For updating IANA data manually, there are 2 options:
 
 * download the files and recompile:
 
-  1. Configure a custom  directory with the `:data_dir` option.
+  1. Configure a custom directory with the `:data_dir` option.
   2. Download the files manually by running the mix task below:
      ```bash
      mix tz.download
