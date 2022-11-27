@@ -13,18 +13,23 @@ defmodule Tz.IanaDataDir do
       |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
 
     if tz_data_dirs != [] do
-      latest_version = Enum.max(tz_data_dirs)
+      latest_dir_name = Enum.max(tz_data_dirs)
 
-      version =
+      dir_name =
         if forced_version = forced_iana_version() do
           case Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}") do
-            nil -> Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
-            version -> version
+            nil ->
+              "tzdata" <> latest_version = latest_dir_name
+              Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
+              latest_dir_name
+
+            dir_name ->
+              dir_name
           end
         end
 
-      unless version do
-        latest_version
+      unless dir_name do
+        latest_dir_name
       end
     end
   end
