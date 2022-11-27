@@ -81,7 +81,9 @@ defmodule Tz.IanaDataDir do
   end
 
   def delete_tzdata_dir(version) do
-    Path.join(dir(), "tzdata#{version}")
-    |> File.rm_rf!()
+    if (version != forced_iana_version()) do
+      Path.join(dir(), "tzdata#{version}")
+      |> File.rm_rf!()
+    end
   end
 end
