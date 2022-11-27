@@ -1,30 +1,35 @@
 defmodule Tz.IanaDataDir do
   @moduledoc false
 
-  @regex_tzdata_dir_name ~r/^tzdata20[0-9]{2}[a-z]$/
-
   def dir(), do: Application.get_env(:tz, :data_dir) || to_string(:code.priv_dir(:tz))
 
-  def tzdata_dir_name(parent_dir \\ dir()) do
+  def forced_iana_version(), do: Application.get_env(:tz, :iana_version)
+
+  defp tzdata_dir_name(parent_dir) do
     tz_data_dirs =
       File.ls!(parent_dir)
-      |> Enum.filter(&Regex.match?(@regex_tzdata_dir_name, &1))
+      |> Enum.filter(&Regex.match?(~r/^tzdata20[0-9]{2}[a-z]$/, &1))
 
-    if tz_data_dirs != [] do
-      Enum.max(tz_data_dirs)
-    else
-      nil
+    cond do
+      tz_data_dirs == [] ->
+        nil
+
+      forced_version = forced_iana_version() ->
+        Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}")
+
+      true ->
+        Enum.max(tz_data_dirs)
     end
   end
 
   def tzdata_dir_path() do
-    if dir_name = tzdata_dir_name() do
+    if dir_name = tzdata_dir_name(dir()) do
       Path.join(dir(), dir_name)
     end
   end
 
   def tzdata_version() do
-    if dir_name = tzdata_dir_name() do
+    if dir_name = tzdata_dir_name(dir()) do
       "tzdata" <> version = dir_name
       version
     end
