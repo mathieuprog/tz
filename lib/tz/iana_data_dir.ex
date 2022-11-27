@@ -15,20 +15,17 @@ defmodule Tz.IanaDataDir do
     if tz_data_dirs != [] do
       latest_dir_name = Enum.max(tz_data_dirs)
 
-      dir_name =
-        if forced_version = forced_iana_version() do
-          case Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}") do
-            nil ->
-              "tzdata" <> latest_version = latest_dir_name
-              Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
-              latest_dir_name
+      if forced_version = forced_iana_version() do
+        case Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}") do
+          nil ->
+            "tzdata" <> latest_version = latest_dir_name
+            Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
+            latest_dir_name
 
-            dir_name ->
-              dir_name
-          end
+          dir_name ->
+            dir_name
         end
-
-      unless dir_name do
+      else
         latest_dir_name
       end
     end
