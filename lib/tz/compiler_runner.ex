@@ -5,8 +5,9 @@ defmodule Tz.CompilerRunner do
 
   known_env_keys =
     [
-      :data_dir,
       :http_client,
+      :data_dir,
+      :iana_version,
       :build_dst_periods_until_year,
       :reject_periods_before_year
     ]
