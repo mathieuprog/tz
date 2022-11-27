@@ -19,6 +19,8 @@ defmodule Tz.IanaDataDir do
         case Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}") do
           nil ->
             "tzdata" <> latest_version = latest_dir_name
+            # TODO show how to run mix compile command
+            # TODO printed multiple times
             Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
             latest_dir_name
 
