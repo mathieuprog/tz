@@ -19,9 +19,12 @@ defmodule Tz.IanaDataDir do
         case Enum.find(tz_data_dirs, & &1 == "tzdata#{forced_version}") do
           nil ->
             "tzdata" <> latest_version = latest_dir_name
-            # TODO show how to run mix compile command
-            # TODO printed multiple times
-            Logger.warn("Tz is compiling with version #{latest_version}. Download version #{forced_version} (run `mix tz.download #{forced_version}`) and compile :tz again.")
+
+            Logger.warn(
+              "Tz is compiling with version #{latest_version}. "
+              <> "Download version #{forced_version} (run `mix tz.download #{forced_version}`) "
+              <> "and compile :tz again (run `mix deps.compile tz --force`).")
+
             latest_dir_name
 
           dir_name ->
@@ -57,7 +60,6 @@ defmodule Tz.IanaDataDir do
       true ->
         if dir_name = tzdata_dir_name(to_string(:code.priv_dir(:tz))) do
           File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
-          # TODO check that the right version is copied?
         else
           raise "tzdata files not found"
         end
