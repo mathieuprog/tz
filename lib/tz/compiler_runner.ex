@@ -25,6 +25,14 @@ defmodule Tz.CompilerRunner do
     raise "possible options are #{joined_known_env_keys}"
   end
 
+  data_dir = Application.get_env(:tz, :data_dir)
+  iana_version = Application.get_env(:tz, :iana_version)
+
+  if iana_version && !data_dir do
+    raise "when setting a specific IANA version to use, " <>
+      "the files must be stored in a custom directory via the :data_dir configuration"
+  end
+
   require Tz.Compiler
 
   Tz.Compiler.compile()
