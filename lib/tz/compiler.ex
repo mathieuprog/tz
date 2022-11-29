@@ -1,6 +1,7 @@
 defmodule Tz.Compiler do
   @moduledoc false
 
+  require Logger
   require Tz.IanaFileParser
   require Tz.PeriodsBuilder
 
@@ -9,10 +10,7 @@ defmodule Tz.Compiler do
   alias Tz.PeriodsBuilder
 
   def compile() do
-    IanaDataDir.maybe_copy_iana_files_to_custom_dir()
-
-    tzdata_dir_path = IanaDataDir.tzdata_dir_path()
-    "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
+    {tzdata_dir_path, tzdata_version} = tzdata_dir_and_version()
 
     {periods_and_links, ongoing_rules} =
       for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
@@ -56,6 +54,35 @@ defmodule Tz.Compiler do
     compile_periods(periods_and_links, tzdata_version)
 
     compile_map_ongoing_changing_rules(ongoing_rules)
+  end
+
+  defp tzdata_dir_and_version() do
+    IanaDataDir.maybe_copy_iana_files_to_custom_dir()
+
+    cond do
+      tzdata_dir_path = IanaDataDir.relevant_tzdata_dir_path() ->
+        "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
+
+        {tzdata_dir_path, tzdata_version}
+
+      IanaDataDir.forced_iana_version() == nil ->
+        raise "tzdata files not found"
+
+      tzdata_dir_path = IanaDataDir.latest_tzdata_dir_path() ->
+        "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
+
+        Logger.warn(
+          "Tz is compiling with version #{tzdata_version}. "
+          <> "Download version #{IanaDataDir.forced_iana_version()} "
+          <> "(run `mix tz.download #{IanaDataDir.forced_iana_version()}`) "
+          <> "and compile :tz again "
+          <> "(run `mix deps.compile tz --force`).")
+
+        {tzdata_dir_path, tzdata_version}
+
+      true ->
+        raise "tzdata files not found"
+    end
   end
 
   defp reject_periods_before_year(periods) do

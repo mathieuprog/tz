@@ -25,7 +25,7 @@ defmodule Tz.Updater do
   end
 
   defp maybe_update_tz_database_to_latest_version() do
-    latest_version_saved = IanaDataDir.tzdata_version()
+    latest_version_saved = IanaDataDir.latest_tzdata_version()
 
     case fetch_latest_iana_tz_version() do
       {:ok, latest_version} ->
