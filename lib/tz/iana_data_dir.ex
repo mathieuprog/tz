@@ -1,6 +1,8 @@
 defmodule Tz.IanaDataDir do
   @moduledoc false
 
+  require Logger
+
   def dir(), do: Application.get_env(:tz, :data_dir) || to_string(:code.priv_dir(:tz))
 
   def forced_iana_version(), do: Application.get_env(:tz, :iana_version)
@@ -69,16 +71,15 @@ defmodule Tz.IanaDataDir do
       true ->
         dir_names = list_dir_names(to_string(:code.priv_dir(:tz)))
 
-        cond do
-          dir_name = relevant_dir_name(dir_names) ->
-            File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
+        dir_name = relevant_dir_name(dir_names) || latest_dir_name(dir_names)
 
-          dir_name = latest_dir_name(dir_names) ->
-            File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
-
-          true ->
-            raise "tzdata files not found"
+        unless dir_name do
+          raise "tzdata files not found"
         end
+
+        File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
+
+        Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
     end
   end
 
