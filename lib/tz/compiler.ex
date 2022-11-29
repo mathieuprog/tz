@@ -76,7 +76,8 @@ defmodule Tz.Compiler do
           <> "Download version #{IanaDataDir.forced_iana_version()} "
           <> "by running `mix tz.download #{IanaDataDir.forced_iana_version()}`, "
           <> "and recompile the time zone periods "
-          <> "by running `mix tz.compile`.")
+          <> "by running `mix deps.compile tz --force` "
+          <> "(make sure you have configured a custom dir via the :data_dir configuration).")
 
         {tzdata_dir_path, tzdata_version}
 
