@@ -72,11 +72,11 @@ defmodule Tz.Compiler do
         "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
 
         Logger.warn(
-          "Tz is compiling with version #{tzdata_version}. "
+          "Tz is compiling with IANA version #{tzdata_version}. "
           <> "Download version #{IanaDataDir.forced_iana_version()} "
-          <> "(run `mix tz.download #{IanaDataDir.forced_iana_version()}`) "
-          <> "and compile :tz again "
-          <> "(run `mix deps.compile tz --force`).")
+          <> "by running `mix tz.download #{IanaDataDir.forced_iana_version()}`, "
+          <> "and recompile the time zone periods "
+          <> "by running `mix tz.compile`.")
 
         {tzdata_dir_path, tzdata_version}
 
