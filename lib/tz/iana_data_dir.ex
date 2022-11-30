@@ -62,9 +62,11 @@ defmodule Tz.IanaDataDir do
 
   def maybe_copy_iana_files_to_custom_dir() do
     cond do
+      # no custom dir
       to_string(:code.priv_dir(:tz)) == dir() ->
         nil
 
+      # tzdata dir already exists
       relevant_tzdata_dir_path() ->
         nil
 
@@ -72,6 +74,23 @@ defmodule Tz.IanaDataDir do
         dir_names = list_dir_names(to_string(:code.priv_dir(:tz)))
 
         dir_name = relevant_dir_name(dir_names) || latest_dir_name(dir_names)
+
+        cond do
+          dir_name = relevant_dir_name(dir_names) ->
+            File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
+            Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
+
+          dir_name = latest_dir_name(dir_names) ->
+            if latest_tzdata_dir_name() < dir_name do
+              File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
+              Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
+            end
+
+          true ->
+            unless dir_name do
+              raise "tzdata files not found"
+            end
+        end
 
         unless dir_name do
           raise "tzdata files not found"
