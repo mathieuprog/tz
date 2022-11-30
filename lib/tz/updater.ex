@@ -11,11 +11,13 @@ defmodule Tz.Updater do
   Recompiles the period maps only if more recent IANA data is available.
   """
   def maybe_recompile() do
-    IanaDataDir.maybe_copy_iana_files_to_custom_dir()
-
     {_, saved_tz_version} = maybe_update_tz_database_to_latest_version()
 
-    if !IanaDataDir.forced_iana_version() && saved_tz_version != PeriodsProvider.iana_version() do
+    if saved_tz_version != PeriodsProvider.iana_version() do
+      if IanaDataDir.forced_iana_version() do
+        raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced"
+      end
+
       Logger.info("Tz is recompiling time zone periods...")
       Code.compiler_options(ignore_module_conflict: true)
       Compiler.compile()
