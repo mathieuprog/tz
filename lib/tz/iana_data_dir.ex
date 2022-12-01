@@ -78,13 +78,13 @@ defmodule Tz.IanaDataDir do
             File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
             Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
 
-            lib_dir_name = latest_dir_name(lib_dir_names) ->
-              app_dir_name = latest_tzdata_dir_name()
+          lib_dir_name = latest_dir_name(lib_dir_names) ->
+            app_dir_name = latest_tzdata_dir_name()
 
-              if app_dir_name && app_dir_name < lib_dir_name do
-                File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
-                Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
-              end
+            if !app_dir_name || app_dir_name < lib_dir_name do
+              File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
+              Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
+            end
 
           true ->
             raise "tzdata files not found"
