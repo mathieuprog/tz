@@ -71,34 +71,24 @@ defmodule Tz.IanaDataDir do
         nil
 
       true ->
-        dir_names = list_dir_names(to_string(:code.priv_dir(:tz)))
-
-        dir_name = relevant_dir_name(dir_names) || latest_dir_name(dir_names)
+        lib_dir_names = list_dir_names(to_string(:code.priv_dir(:tz)))
 
         cond do
-          dir_name = relevant_dir_name(dir_names) ->
-            File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
-            Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
+          lib_dir_name = relevant_dir_name(lib_dir_names) ->
+            File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
+            Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
 
-          dir_name = latest_dir_name(dir_names) ->
-            if latest_tzdata_dir_name() < dir_name do
-              File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
-              Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
-            end
+            lib_dir_name = latest_dir_name(lib_dir_names) ->
+              app_dir_name = latest_tzdata_dir_name()
+
+              if app_dir_name && app_dir_name < lib_dir_name do
+                File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
+                Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
+              end
 
           true ->
-            unless dir_name do
-              raise "tzdata files not found"
-            end
+            raise "tzdata files not found"
         end
-
-        unless dir_name do
-          raise "tzdata files not found"
-        end
-
-        File.cp_r!(Path.join(:code.priv_dir(:tz), dir_name), Path.join(dir(), dir_name))
-
-        Logger.info("Moved #{Path.join(:code.priv_dir(:tz), dir_name)} to #{Path.join(dir(), dir_name)}")
     end
   end
 
