@@ -32,7 +32,7 @@ defmodule Tz.Updater do
     case fetch_latest_iana_tz_version() do
       {:ok, latest_version} ->
         if latest_version != latest_version_saved do
-          Logger.info("Tz is downloading the IANA time zone database (version #{latest_version})...")
+          Logger.info("Tz is downloading the IANA time zone database version #{latest_version}...")
           case update_tz_database(latest_version) do
             {:ok, dir} ->
               Logger.info("Tz download done (into #{dir})")
