@@ -18,7 +18,7 @@ defmodule Tz.Updater do
         raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced"
       end
 
-      Logger.info("Tz is recompiling time zone periods...")
+      Logger.info("Tz is recompiling the time zone periods...")
       Code.compiler_options(ignore_module_conflict: true)
       Compiler.compile()
       Code.compiler_options(ignore_module_conflict: false)
@@ -40,7 +40,7 @@ defmodule Tz.Updater do
               {:updated, latest_version}
 
             :error ->
-              Logger.error("Tz failed to download the latest archived IANA time zone database (version #{latest_version})")
+              Logger.error("Tz failed to download the latest IANA time zone database (version #{latest_version})")
               {:error, latest_version_saved}
           end
         else
@@ -69,8 +69,8 @@ defmodule Tz.Updater do
       when is_binary(version) and is_binary(dir) do
     case download_tz_database(version) do
       {:ok, content} ->
-        IanaDataDir.extract_tzdata_into_dir(version, content, dir)
-        {:ok, dir}
+        tzdata_dir = IanaDataDir.extract_tzdata_into_dir(version, content, dir)
+        {:ok, tzdata_dir}
 
       :error ->
         :error

@@ -118,6 +118,8 @@ defmodule Tz.IanaDataDir do
     ])
 
     :ok = File.rm!(tmp_archive_path)
+
+    Path.join(dir, tzdata_dir_name)
   end
 
   def delete_tzdata_dir(version) do
