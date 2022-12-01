@@ -11,9 +11,9 @@ defmodule Tz.Updater do
   Recompiles the period maps only if more recent IANA data is available.
   """
   def maybe_recompile() do
-    {_, saved_tz_version} = maybe_update_tz_database_to_latest_version()
+    {_, latest_tz_version} = maybe_update_tz_database_to_latest_version()
 
-    if saved_tz_version != PeriodsProvider.iana_version() do
+    if latest_tz_version != PeriodsProvider.iana_version() do
       if IanaDataDir.forced_iana_version() do
         raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced"
       end
@@ -31,7 +31,7 @@ defmodule Tz.Updater do
 
     case fetch_latest_iana_tz_version() do
       {:ok, latest_version} ->
-        if latest_version != latest_version_saved do
+        if latest_version != latest_version_saved && latest_version != PeriodsProvider.iana_version() do
           case update_tz_database(latest_version) do
             :ok ->
               IanaDataDir.delete_tzdata_dir(latest_version_saved)
