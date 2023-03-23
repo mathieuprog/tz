@@ -10,7 +10,9 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
     @impl Tz.HTTP.HTTPClient
     def request(hostname, path) do
-      {:ok, conn} = HTTP.connect(:https, hostname, 443)
+      opts = Application.get_env(:tz, Tz.HTTP.Mint.HTTPClient, [])
+
+      {:ok, conn} = HTTP.connect(:https, hostname, 443, opts)
       {:ok, conn, _} = HTTP.request(conn, "GET", path, [], nil)
 
       {:ok, response = %MintHTTPResponse{}} = recv_response(conn)

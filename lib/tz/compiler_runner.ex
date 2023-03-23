@@ -9,7 +9,8 @@ defmodule Tz.CompilerRunner do
       :data_dir,
       :iana_version,
       :build_dst_periods_until_year,
-      :reject_periods_before_year
+      :reject_periods_before_year,
+      Tz.HTTP.Mint.HTTPClient
     ]
 
   unknown_env_keys =

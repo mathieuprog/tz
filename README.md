@@ -178,6 +178,13 @@ defp deps do
 end
 ```
 
+You may also add custom [options](https://hexdocs.pm/mint/Mint.HTTP.html#connect/4-options) for the http client `mint`:
+
+```elixir
+config :tz, Tz.HTTP.Mint.HTTPClient,
+  proxy: {:http, proxy_host, proxy_port, []}
+```
+
 ## Custom HTTP client
 
 You may implement the `Tz.HTTP.HTTPClient` behaviour in order to use another HTTP client.
