@@ -3,7 +3,7 @@
 ## 0.25.x
 
 * Fix the bug that occurs when the maximum available year in an IANA rule exceeds
-  the limit set by the 'max' rule.
+  the limit set by the 'max' rule (happened for Palestine).
 
 ## 0.24.x
 
