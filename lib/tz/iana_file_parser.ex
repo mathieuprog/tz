@@ -440,6 +440,7 @@ defmodule Tz.IanaFileParser do
         [rule1, rule2] ->
           last_year = Enum.max([
             build_dst_periods_until_year,
+            elem(List.last(rules).from, 0).year,
             elem(rule1.from, 0).year,
             elem(rule2.from, 0).year
           ])
