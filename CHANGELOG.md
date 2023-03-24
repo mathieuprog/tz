@@ -5,6 +5,7 @@
 * Add custom options for default Mint HTTP client.
 * Fix the bug that occurs when the maximum available year in an IANA rule exceeds
   the limit set by the 'max' rule (happened for Palestine).
+* Fix warnings
 
 ## 0.24.x
 
