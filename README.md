@@ -238,6 +238,8 @@ config :tz, build_dst_periods_until_year: 20 + NaiveDateTime.utc_now().year
 
 Note that increasing the year will also slightly increase compilation time, as it generates more periods to compile.
 
+The default setting computes periods for a period of 5 years from the time the code is compiled. Note that if you have added the automatic updater, the periods will be recomputed with every update, which occurs multiple times throughout the year.
+
 ### Rejecting old time zone periods
 
 You can slightly decrease **memory usage** and **compilation time**, by rejecting time zone periods before a given year:
