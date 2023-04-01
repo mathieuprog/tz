@@ -124,12 +124,12 @@ For updating IANA data manually, there are 2 options:
      Or from an iex session to recompile at runtime:
      ```bash
      iex -S mix
-     iex(1)> Tz.Compiler.compile()
+     iex> Tz.Compiler.compile()
      ```
      Note that recompilation at runtime is not persistent, run `mix deps.compile tz --force` in addition.
   4. Check that the version is the one expected:
      ```bash
-     iex(2)> Tz.iana_version()
+     iex> Tz.iana_version()
      ```
 
 To force a specific IANA version:
@@ -152,7 +152,7 @@ To force a specific IANA version:
      ```
   5. Check that the version is the one expected:
      ```bash
-     iex(2)> Tz.iana_version()
+     iex> Tz.iana_version()
      ```
 
 ## Automatic vs manual updates
