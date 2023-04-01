@@ -114,11 +114,6 @@ For updating IANA data manually, there are 2 options:
      ```bash
      mix tz.download
      ```
-     You may also pass a specific version:
-     ```bash
-     mix tz.download 2021a
-     ```
-     If you want to install a specific version, ensure to delete more recent versions from the folder.
   3. Recompile the dependency:
      ```bash
      mix deps.compile tz --force
@@ -130,6 +125,26 @@ For updating IANA data manually, there are 2 options:
      ```
      Note that recompilation at runtime is not persistent, run `mix deps.compile tz --force` in addition.
   4. Check that the version is the one expected:
+     ```bash
+     iex(2)> Tz.iana_version()
+     ```
+
+To force a specific IANA version:
+
+  1. Configure a custom directory with the `:data_dir` option.
+  2. Download the files by running the mix task below (say we want the 2021a version):
+     ```bash
+     mix tz.download 2021a
+     ```
+  3. Add the `:iana_version` option:
+     ```elixir
+     config :tz, :iana_version, 2021a
+     ```
+  4. Recompile the dependency:
+     ```bash
+     mix deps.compile tz --force
+     ```
+  5. Check that the version is the one expected:
      ```bash
      iex(2)> Tz.iana_version()
      ```
