@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.26.x
+
+* Add :iana_version config.
+
 ## 0.25.x
 
 * Add custom options for default Mint HTTP client.
