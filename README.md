@@ -82,7 +82,7 @@ To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supe
 {Tz.UpdatePeriodically, []}
 ```
 
-You may pass the option `:interval_in_days` in order to configure the frequency of the updates.
+You may pass the option `:interval_in_days` in order to configure the frequency of the updates:
 
 ```elixir
 {Tz.UpdatePeriodically, [interval_in_days: 5]}
