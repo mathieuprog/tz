@@ -12,6 +12,8 @@ defmodule Tz.Compiler do
   def compile() do
     {tzdata_dir_path, tzdata_version} = tzdata_dir_and_version()
 
+    validate_tzdata_dir_has_required_files(tzdata_dir_path)
+
     {periods_and_links, ongoing_rules} =
       for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
         {zone_records, rule_records, link_records, ongoing_rules} =
@@ -165,5 +167,27 @@ defmodule Tz.Compiler do
     module = :"Elixir.Tz.OngoingChangingRulesProvider"
     Module.create(module, quoted, Macro.Env.location(__ENV__))
     :code.purge(module)
+  end
+
+  defp validate_tzdata_dir_has_required_files(tzdata_dir_path) do
+    required_files = [
+      "africa",
+      "antarctica",
+      "asia",
+      "australasia",
+      "backward",
+      "etcetera",
+      "europe",
+      "northamerica",
+      "southamerica",
+      "iso3166.tab",
+      "zone1970.tab"
+    ]
+
+    missing_files = Enum.filter(required_files, &!File.exists?(Path.join(tzdata_dir_path, &1)))
+
+    if length(missing_files) > 0 do
+      raise "files #{inspect missing_files} are missing in #{tzdata_dir_path}"
+    end
   end
 end
