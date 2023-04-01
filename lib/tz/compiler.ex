@@ -82,7 +82,7 @@ defmodule Tz.Compiler do
           <> "by running: mix tz.download #{forced_iana_version}\n"
           <> "3. Restore the :iana_version config\n"
           <> "4. Recompile the time zone periods "
-          <> "by running: mix deps.compile tz --force"
+          <> "by running: mix deps.compile tz --force\n"
           <> "5. Make sure the periods are compiled with tzdata#{forced_iana_version} "
           <> "by running: Tz.iana_version()"
         )
