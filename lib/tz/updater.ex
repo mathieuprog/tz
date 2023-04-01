@@ -33,7 +33,7 @@ defmodule Tz.Updater do
       {:ok, latest_version} ->
         if latest_version != latest_version_saved && latest_version != PeriodsProvider.iana_version() do
           case update_tz_database(latest_version) do
-            :ok ->
+            {:ok, _dir} ->
               IanaDataDir.delete_tzdata_dir(latest_version_saved)
               {:updated, latest_version}
 
@@ -72,7 +72,7 @@ defmodule Tz.Updater do
       {:ok, content} ->
         tzdata_dir = IanaDataDir.extract_tzdata_into_dir(version, content, dir)
         Logger.info("IANA time zone data extracted into #{tzdata_dir}")
-        :ok
+        {:ok, tzdata_dir}
 
       :error ->
         :error
