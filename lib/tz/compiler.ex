@@ -73,7 +73,7 @@ defmodule Tz.Compiler do
       tzdata_dir_path = IanaDataDir.latest_tzdata_dir_path() ->
         "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
 
-        Logger.warn(
+        Logger.error(
           "Tz is compiling with IANA version #{tzdata_version}. "
           <> "Download version #{IanaDataDir.forced_iana_version()} "
           <> "by running `mix tz.download #{IanaDataDir.forced_iana_version()}`, "
