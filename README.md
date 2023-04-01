@@ -82,13 +82,13 @@ To enable automatic updates, add `Tz.UpdatePeriodically` as a child in your supe
 {Tz.UpdatePeriodically, []}
 ```
 
-## Manual time zone data updates
-
 You may pass the option `:interval_in_days` in order to configure the frequency of the updates.
 
 ```elixir
 {Tz.UpdatePeriodically, [interval_in_days: 5]}
 ```
+
+## Manual time zone data updates
 
 If you do not wish to update automatically, but still wish to be alerted for new upcoming IANA updates, add
 `Tz.WatchPeriodically` as a child in your supervisor:
