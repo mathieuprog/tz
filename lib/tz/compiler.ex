@@ -77,7 +77,7 @@ defmodule Tz.Compiler do
 
         raise(
           "Missing tzdata#{forced_iana_version} files.\n"
-          <> "1. Temprorarily remove the :iana_version config\n"
+          <> "1. Temporarily remove the :iana_version config\n"
           <> "2. Download version #{forced_iana_version} "
           <> "by running: mix tz.download #{forced_iana_version}\n"
           <> "3. Restore the :iana_version config\n"
