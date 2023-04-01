@@ -27,9 +27,13 @@ defmodule Tz.CompilerRunner do
   end
 
   data_dir = Application.compile_env(:tz, :data_dir)
-  iana_version = Application.compile_env(:tz, :iana_version)
+  forced_iana_version = Application.compile_env(:tz, :iana_version)
 
-  if iana_version && !data_dir do
+  if forced_iana_version && !Regex.match?(~r/^20[0-9]{2}[a-z]$/, forced_iana_version) do
+    raise "the value \"#{forced_iana_version}\" provided for the :iana_version config is invalid"
+  end
+
+  if forced_iana_version && !data_dir do
     raise "when setting a specific IANA version to use, " <>
       "the files must be stored in a custom directory via the :data_dir configuration"
   end
