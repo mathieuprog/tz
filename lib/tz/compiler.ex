@@ -71,17 +71,23 @@ defmodule Tz.Compiler do
         raise "tzdata files not found"
 
       tzdata_dir_path = IanaDataDir.latest_tzdata_dir_path() ->
-        "tzdata" <> tzdata_version = Path.basename(tzdata_dir_path)
+        "tzdata" <> installed_iana_version = Path.basename(tzdata_dir_path)
 
-        Logger.error(
-          "Tz is compiling with IANA version #{tzdata_version}. "
-          <> "Download version #{IanaDataDir.forced_iana_version()} "
-          <> "by running `mix tz.download #{IanaDataDir.forced_iana_version()}`, "
-          <> "and recompile the time zone periods "
-          <> "by running `mix deps.compile tz --force` "
-          <> "(make sure you have configured a custom dir via the :data_dir configuration).")
+        forced_iana_version = IanaDataDir.forced_iana_version()
 
-        {tzdata_dir_path, tzdata_version}
+        raise(
+          "Missing tzdata#{forced_iana_version} files.\n"
+          <> "1. Temprorarily remove the :iana_version config\n"
+          <> "2. Download version #{forced_iana_version} "
+          <> "by running: mix tz.download #{forced_iana_version}\n"
+          <> "3. Restore the :iana_version config\n"
+          <> "4. Recompile the time zone periods "
+          <> "by running: mix deps.compile tz --force"
+          <> "5. Make sure the periods are compiled with tzdata#{forced_iana_version} "
+          <> "by running: Tz.iana_version()"
+        )
+
+        {tzdata_dir_path, installed_iana_version}
 
       true ->
         raise "tzdata files not found"
