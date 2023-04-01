@@ -15,7 +15,7 @@ defmodule Tz.Updater do
 
     if latest_tz_version != PeriodsProvider.iana_version() do
       if IanaDataDir.forced_iana_version() do
-        raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced"
+        raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced through the :iana_version config"
       end
 
       Logger.info("Tz is recompiling the time zone periods...")

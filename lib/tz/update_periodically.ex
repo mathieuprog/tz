@@ -6,6 +6,7 @@ defmodule Tz.UpdatePeriodically do
   use GenServer
   require Logger
   alias Tz.HTTP
+  alias Tz.IanaDataDir
   alias Tz.Updater
 
   defp maybe_recompile() do
@@ -16,6 +17,10 @@ defmodule Tz.UpdatePeriodically do
 
   @doc false
   def start_link(opts) do
+    if IanaDataDir.forced_iana_version() do
+      raise "cannot update time zone periods as version #{IanaDataDir.forced_iana_version()} has been forced through the :iana_version config"
+    end
+
     HTTP.get_http_client!()
 
     GenServer.start_link(__MODULE__, opts)
