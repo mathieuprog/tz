@@ -284,7 +284,7 @@ config :tz, :data_dir, Path.join(Path.dirname(__DIR__), "priv")
 ## Get the IANA time zone database version
 
 ```elixir
-Tz.iana_version() == "2023a"
+Tz.iana_version() == "2023c"
 ```
 
 ## Time zone utility functions
