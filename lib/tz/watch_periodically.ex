@@ -9,6 +9,21 @@ defmodule Tz.WatchPeriodically do
   alias Tz.PeriodsProvider
   alias Tz.Updater
 
+  # Logger.warn/1 is deprecated on Elixir 1.15 but since its
+  # a macro we can replace it without performance penalty by
+  # selecting the available Logger macro at compile time.
+  defmacrop logger_warning(message) do
+    if Code.ensure_loaded?(Logger) && function_exported?(Logger, :"MACRO-warning", 2) do
+      quote do
+        Logger.warning(unquote(message))
+      end
+    else
+      quote do
+        Logger.warn(unquote(message))
+      end
+    end
+  end
+
   defp watch(on_update_callback) do
     Logger.debug("Tz is checking for IANA time zone database updates")
 
@@ -16,7 +31,7 @@ defmodule Tz.WatchPeriodically do
       {:ok, latest_version} ->
         if latest_version != PeriodsProvider.iana_version() do
           link = "https://data.iana.org/time-zones/releases/tzdata#{latest_version}.tar.gz"
-          Logger.warn("Tz found a more recent time zone database available for download at #{link}")
+          logger_warning("Tz found a more recent time zone database available for download at #{link}")
           on_update_callback && on_update_callback.(latest_version)
         end
       :error ->
