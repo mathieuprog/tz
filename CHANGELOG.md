@@ -2,7 +2,8 @@
 
 ## 0.26.x
 
-* Add :iana_version config.
+* Add `:iana_version` config.
+* Address Elixir 1.15 warning messages.
 
 ## 0.25.x
 
