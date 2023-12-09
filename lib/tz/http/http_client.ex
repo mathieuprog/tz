@@ -3,5 +3,5 @@ defmodule Tz.HTTP.HTTPClient do
   A behaviour allowing to plug in any HTTP client.
   """
 
-  @callback request(String.t(), String.t()) :: struct
+  @callback request(String.t(), String.t()) :: struct | nil
 end
