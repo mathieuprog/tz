@@ -102,6 +102,7 @@ defmodule Tz.TimeZoneDatabase do
     [rule1, rule2] = Tz.OngoingChangingRulesProvider.rules(rule_name)
 
     rule_records = Tz.IanaFileParser.denormalized_rule_data([
+      Tz.IanaFileParser.change_rule_year(rule2, year - 1),
       Tz.IanaFileParser.change_rule_year(rule1, year - 1),
       Tz.IanaFileParser.change_rule_year(rule2, year),
       Tz.IanaFileParser.change_rule_year(rule1, year)

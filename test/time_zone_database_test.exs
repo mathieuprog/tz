@@ -134,9 +134,14 @@ defmodule TimeZoneDatabaseTest do
     zoned_date_time = date_time_utc |> DateTime.shift_zone!(time_zone, Tz.TimeZoneDatabase)
     # #DateTime<2030-01-01 00:00:00+13:45 +1345 Pacific/Chatham>
 
-    naive = DateTime.to_naive(zoned_date_time)
+    naive_datetime = DateTime.to_naive(zoned_date_time)
     # ~N[2030-01-01 00:00:00]
 
-    assert zoned_date_time == DateTime.from_naive!(naive, time_zone, Tz.TimeZoneDatabase)
+    assert zoned_date_time == DateTime.from_naive!(naive_datetime, time_zone, Tz.TimeZoneDatabase)
+
+    naive_datetime = NaiveDateTime.from_iso8601!("2030-01-01T00:00:00")
+    datetime = DateTime.from_naive!(naive_datetime, "Europe/Lisbon", Tz.TimeZoneDatabase)
+
+    assert DateTime.to_iso8601(datetime) == "2030-01-01T00:00:00+00:00"
   end
 end
