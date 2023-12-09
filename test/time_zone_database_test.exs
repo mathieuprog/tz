@@ -126,4 +126,17 @@ defmodule TimeZoneDatabaseTest do
     assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Etc/UTC")
     assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Europe/Brussels")
   end
+
+  test "fix issue #24" do
+    date_time_utc = ~U[2029-12-31 10:15:00Z]
+    time_zone = "Pacific/Chatham"
+
+    zoned_date_time = date_time_utc |> DateTime.shift_zone!(time_zone, Tz.TimeZoneDatabase)
+    # #DateTime<2030-01-01 00:00:00+13:45 +1345 Pacific/Chatham>
+
+    naive = DateTime.to_naive(zoned_date_time)
+    # ~N[2030-01-01 00:00:00]
+
+    assert zoned_date_time == DateTime.from_naive!(naive, time_zone, Tz.TimeZoneDatabase)
+  end
 end
