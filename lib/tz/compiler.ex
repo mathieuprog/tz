@@ -15,12 +15,14 @@ defmodule Tz.Compiler do
     validate_tzdata_dir_has_required_files(tzdata_dir_path)
 
     {periods_and_links, ongoing_rules} =
-      for filename <- ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
+      for filename <-
+            ~w(africa antarctica asia australasia backward etcetera europe northamerica southamerica)s do
         {zone_records, rule_records, link_records, ongoing_rules} =
           IanaFileParser.parse(Path.join(tzdata_dir_path, filename))
 
         Enum.each(rule_records, fn {rule_name, rules} ->
-          ongoing_rules_count = Enum.count(rules, & &1.to == :max)
+          ongoing_rules_count = Enum.count(rules, &(&1.to == :max))
+
           if ongoing_rules_count > 2 do
             raise "unexpected case: #{ongoing_rules_count} ongoing rules for rule \"#{rule_name}\""
           end
@@ -48,10 +50,12 @@ defmodule Tz.Compiler do
         {periods ++ links, ongoing_rules}
       end
       |> Enum.reduce(
-          {[], %{}},
-          fn {periods_and_links, ongoing_rules}, {all_periods_and_links, all_ongoing_rules} ->
-            {periods_and_links ++ all_periods_and_links, Map.merge(ongoing_rules, all_ongoing_rules)}
-          end)
+        {[], %{}},
+        fn {periods_and_links, ongoing_rules}, {all_periods_and_links, all_ongoing_rules} ->
+          {periods_and_links ++ all_periods_and_links,
+           Map.merge(ongoing_rules, all_ongoing_rules)}
+        end
+      )
 
     compile_periods(periods_and_links, tzdata_version)
 
@@ -76,15 +80,15 @@ defmodule Tz.Compiler do
         forced_iana_version = IanaDataDir.forced_iana_version()
 
         raise(
-          "Missing tzdata#{forced_iana_version} files.\n"
-          <> "1. Temporarily remove the :iana_version config\n"
-          <> "2. Download version #{forced_iana_version} "
-          <> "by running: mix tz.download #{forced_iana_version}\n"
-          <> "3. Restore the :iana_version config\n"
-          <> "4. Recompile the time zone periods "
-          <> "by running: mix deps.compile tz --force\n"
-          <> "5. Make sure the periods are compiled with tzdata#{forced_iana_version} "
-          <> "by running: Tz.iana_version()"
+          "Missing tzdata#{forced_iana_version} files.\n" <>
+            "1. Temporarily remove the :iana_version config\n" <>
+            "2. Download version #{forced_iana_version} " <>
+            "by running: mix tz.download #{forced_iana_version}\n" <>
+            "3. Restore the :iana_version config\n" <>
+            "4. Recompile the time zone periods " <>
+            "by running: mix deps.compile tz --force\n" <>
+            "5. Make sure the periods are compiled with tzdata#{forced_iana_version} " <>
+            "by running: Tz.iana_version()"
         )
 
         {tzdata_dir_path, installed_iana_version}
@@ -122,7 +126,7 @@ defmodule Tz.Compiler do
   def compile_periods(periods_and_links, tzdata_version) do
     quoted = [
       quote do
-        @moduledoc(false)
+        @moduledoc false
 
         def iana_version() do
           unquote(tzdata_version)
@@ -136,6 +140,7 @@ defmodule Tz.Compiler do
                 periods(unquote(Macro.escape(canonical_zone_name)))
               end
             end
+
           {:periods, zone_name, periods} ->
             quote do
               def periods(unquote(zone_name)) do
@@ -159,7 +164,7 @@ defmodule Tz.Compiler do
   defp compile_map_ongoing_changing_rules(ongoing_rules) do
     quoted = [
       quote do
-        @moduledoc(false)
+        @moduledoc false
       end,
       for {rule_name, rules} <- ongoing_rules do
         quote do
@@ -190,10 +195,10 @@ defmodule Tz.Compiler do
       "zone1970.tab"
     ]
 
-    missing_files = Enum.filter(required_files, &!File.exists?(Path.join(tzdata_dir_path, &1)))
+    missing_files = Enum.filter(required_files, &(!File.exists?(Path.join(tzdata_dir_path, &1))))
 
     if length(missing_files) > 0 do
-      raise "files #{inspect missing_files} are missing in #{tzdata_dir_path}"
+      raise "files #{inspect(missing_files)} are missing in #{tzdata_dir_path}"
     end
   end
 end

@@ -31,9 +31,14 @@ defmodule Tz.WatchPeriodically do
       {:ok, latest_version} ->
         if latest_version != PeriodsProvider.iana_version() do
           link = "https://data.iana.org/time-zones/releases/tzdata#{latest_version}.tar.gz"
-          logger_warning("Tz found a more recent time zone database available for download at #{link}")
+
+          logger_warning(
+            "Tz found a more recent time zone database available for download at #{link}"
+          )
+
           on_update_callback && on_update_callback.(latest_version)
         end
+
       :error ->
         Logger.error("Tz failed to read the latest version of the IANA time zone database")
     end

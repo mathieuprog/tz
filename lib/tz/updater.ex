@@ -31,7 +31,8 @@ defmodule Tz.Updater do
 
     case fetch_latest_iana_tz_version() do
       {:ok, latest_version} ->
-        if latest_version != latest_version_saved && latest_version != PeriodsProvider.iana_version() do
+        if latest_version != latest_version_saved &&
+             latest_version != PeriodsProvider.iana_version() do
           case update_tz_database(latest_version) do
             {:ok, _dir} ->
               IanaDataDir.delete_tzdata_dir(latest_version_saved)
@@ -51,7 +52,9 @@ defmodule Tz.Updater do
 
   @doc false
   def fetch_latest_iana_tz_version() do
-    Logger.info("Tz is fetching the latest IANA time zone data version at https://data.iana.org/time-zones/tzdb/version")
+    Logger.info(
+      "Tz is fetching the latest IANA time zone data version at https://data.iana.org/time-zones/tzdb/version"
+    )
 
     case HTTP.get_http_client!().request("data.iana.org", "/time-zones/tzdb/version") do
       %HTTPResponse{body: body, status_code: 200} ->
@@ -80,9 +83,14 @@ defmodule Tz.Updater do
   end
 
   defp download_tz_database(version) do
-    Logger.info("Tz is downloading the IANA time zone data version #{version} at https://data.iana.org/time-zones/releases/tzdata#{version}.tar.gz")
+    Logger.info(
+      "Tz is downloading the IANA time zone data version #{version} at https://data.iana.org/time-zones/releases/tzdata#{version}.tar.gz"
+    )
 
-    case HTTP.get_http_client!().request("data.iana.org", "/time-zones/releases/tzdata#{version}.tar.gz") do
+    case HTTP.get_http_client!().request(
+           "data.iana.org",
+           "/time-zones/releases/tzdata#{version}.tar.gz"
+         ) do
       %HTTPResponse{body: body, status_code: 200} ->
         Logger.info("Tz download done")
         {:ok, body}

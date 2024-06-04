@@ -149,12 +149,14 @@ defmodule Support.HoloceneCalendar do
   @impl true
   defdelegate valid_time?(hour, minute, second, microsecond), to: Calendar.ISO
 
-  if Code.ensure_loaded?(Calendar.ISO) && function_exported?(Calendar.ISO, :iso_days_to_beginning_of_day, 1) do
+  if Code.ensure_loaded?(Calendar.ISO) &&
+       function_exported?(Calendar.ISO, :iso_days_to_beginning_of_day, 1) do
     @impl true
     defdelegate iso_days_to_beginning_of_day(date), to: Calendar.ISO
   end
 
-  if Code.ensure_loaded?(Calendar.ISO) && function_exported?(Calendar.ISO, :iso_days_to_end_of_day, 1) do
+  if Code.ensure_loaded?(Calendar.ISO) &&
+       function_exported?(Calendar.ISO, :iso_days_to_end_of_day, 1) do
     @impl true
     defdelegate iso_days_to_end_of_day(date), to: Calendar.ISO
   end
