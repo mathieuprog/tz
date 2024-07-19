@@ -99,12 +99,20 @@ defmodule TimeZoneDatabaseTest do
     belgian_period = %{std_offset: 0, utc_offset: 1050, zone_abbr: "LMT"}
 
     iso_days = Calendar.ISO.naive_datetime_to_iso_days(0, 1, 1, 0, 0, 0, {0, 6})
-    assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Etc/UTC")
-    assert {:ok, belgian_period} == Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Europe/Brussels")
+
+    assert {:ok, utc_period} ==
+             Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Etc/UTC")
+
+    assert {:ok, belgian_period} ==
+             Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Europe/Brussels")
 
     iso_days = Calendar.ISO.naive_datetime_to_iso_days(-1, 1, 1, 0, 0, 0, {0, 6})
-    assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Etc/UTC")
-    assert {:ok, belgian_period} == Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Europe/Brussels")
+
+    assert {:ok, utc_period} ==
+             Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Etc/UTC")
+
+    assert {:ok, belgian_period} ==
+             Tz.TimeZoneDatabase.time_zone_period_from_utc_iso_days(iso_days, "Europe/Brussels")
   end
 
   test "time_zone_periods_from_wall_datetime with 0 and negative year" do
@@ -112,19 +120,37 @@ defmodule TimeZoneDatabaseTest do
     belgian_period = %{std_offset: 0, utc_offset: 1050, zone_abbr: "LMT"}
 
     naive_datetime = NaiveDateTime.new!(0, 1, 1, 0, 0, 0, {0, 6})
-    assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
-    assert {:ok, belgian_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Europe/Brussels")
+
+    assert {:ok, utc_period} ==
+             Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
+
+    assert {:ok, belgian_period} ==
+             Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(
+               naive_datetime,
+               "Europe/Brussels"
+             )
 
     naive_datetime = NaiveDateTime.new!(-1, 1, 1, 0, 0, 0, {0, 6})
-    assert {:ok, utc_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
-    assert {:ok, belgian_period} == Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Europe/Brussels")
+
+    assert {:ok, utc_period} ==
+             Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(naive_datetime, "Etc/UTC")
+
+    assert {:ok, belgian_period} ==
+             Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(
+               naive_datetime,
+               "Europe/Brussels"
+             )
   end
 
   test "convert non-iso datetime to iso" do
     non_iso_datetime = NaiveDateTime.convert!(~N[2000-01-01 13:30:15], HoloceneCalendar)
 
     assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Etc/UTC")
-    assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(non_iso_datetime, "Europe/Brussels")
+
+    assert Tz.TimeZoneDatabase.time_zone_periods_from_wall_datetime(
+             non_iso_datetime,
+             "Europe/Brussels"
+           )
   end
 
   test "fix issue #24" do

@@ -2,7 +2,11 @@ defmodule Tz.IanaFileParser do
   @moduledoc false
   # https://data.iana.org/time-zones/tzdb/tz-how-to.html
 
-  @build_dst_periods_until_year Application.compile_env(:tz, :build_dst_periods_until_year, 5 + NaiveDateTime.utc_now().year)
+  @build_dst_periods_until_year Application.compile_env(
+                                  :tz,
+                                  :build_dst_periods_until_year,
+                                  5 + NaiveDateTime.utc_now().year
+                                )
 
   def parse(file_path) do
     records =
@@ -13,9 +17,9 @@ defmodule Tz.IanaFileParser do
       |> Enum.to_list()
       |> parse_strings_into_maps()
 
-    zones = Enum.filter(records, & &1.record_type == :zone)
-    rules = Enum.filter(records, & &1.record_type == :rule)
-    links = Enum.filter(records, & &1.record_type == :link)
+    zones = Enum.filter(records, &(&1.record_type == :zone))
+    rules = Enum.filter(records, &(&1.record_type == :rule))
+    links = Enum.filter(records, &(&1.record_type == :link))
 
     {
       denormalized_zone_data(zones),
@@ -69,9 +73,19 @@ defmodule Tz.IanaFileParser do
 
   defp parse_rule_string_into_maps(rule_string) do
     Enum.zip([
-      [:name, :from_year, :to_year, :_, :month, :day, :time, :local_offset_from_std_time, :letter],
+      [
+        :name,
+        :from_year,
+        :to_year,
+        :_,
+        :month,
+        :day,
+        :time,
+        :local_offset_from_std_time,
+        :letter
+      ],
       tl(String.split(rule_string, ~r{\s}, trim: true, parts: 10))
-      |> Enum.map(& String.trim(&1))
+      |> Enum.map(&String.trim(&1))
     ])
     |> Enum.into(%{})
     |> Map.delete(:_)
@@ -83,7 +97,7 @@ defmodule Tz.IanaFileParser do
     Enum.zip([
       [:canonical_zone_name, :link_zone_name],
       tl(String.split(link_string, ~r{\s}, trim: true, parts: 3))
-      |> Enum.map(& String.trim(&1))
+      |> Enum.map(&String.trim(&1))
     ])
     |> Enum.into(%{})
     |> Map.put(:record_type, :link)
@@ -93,7 +107,7 @@ defmodule Tz.IanaFileParser do
     Enum.zip([
       [:name, :std_offset_from_utc_time, :rules, :format_time_zone_abbr, :to],
       tl(String.split(zone_string, ~r{\s}, trim: true, parts: 6))
-      |> Enum.map(& String.trim(&1))
+      |> Enum.map(&String.trim(&1))
     ])
     |> Enum.into(%{})
     |> Map.merge(%{to: :max}, fn _k, v1, _v2 -> v1 end)
@@ -105,9 +119,9 @@ defmodule Tz.IanaFileParser do
     Enum.zip([
       [:name, :std_offset_from_utc_time, :rules, :format_time_zone_abbr, :to],
       [
-        current_zone_name |
-        String.split(zone_string, ~r{\s}, trim: true, parts: 4)
-        |> Enum.map(& String.trim(&1))
+        current_zone_name
+        | String.split(zone_string, ~r{\s}, trim: true, parts: 4)
+          |> Enum.map(&String.trim(&1))
       ]
     ])
     |> Enum.into(%{})
@@ -121,10 +135,14 @@ defmodule Tz.IanaFileParser do
 
     rules =
       cond do
-        rules == "-" -> 0
+        rules == "-" ->
+          0
+
         String.match?(rules, ~r/[+-]?[0-9]+/) ->
           offset_string_to_seconds(rules)
-        rules -> rules
+
+        rules ->
+          rules
       end
 
     std_offset = offset_string_to_seconds(zone.std_offset_from_utc_time)
@@ -192,10 +210,7 @@ defmodule Tz.IanaFileParser do
     {year, month, day} = parsed_day_to_date(year, month, parsed_day)
     naive_date_time = new_naive_date_time(year, month, day, hour, minute, second)
 
-    %{rule |
-      from: {naive_date_time, time_modifier},
-      ongoing_switch: ongoing_switch
-    }
+    %{rule | from: {naive_date_time, time_modifier}, ongoing_switch: ongoing_switch}
   end
 
   defp new_naive_date_time(year, month, day, 24, minute, second) do
@@ -219,18 +234,22 @@ defmodule Tz.IanaFileParser do
         "last" <> day_of_week_string = day_string
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
         {:last_dow, day_of_week}
+
       String.contains?(day_string, "<=") ->
         [day_of_week_string, on_or_before_day] = String.split(day_string, "<=", trim: true)
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
         on_or_before_day = String.to_integer(on_or_before_day)
         {:dow_equal_or_before_day, day_of_week, on_or_before_day}
+
       String.contains?(day_string, ">=") ->
         [day_of_week_string, on_or_after_day] = String.split(day_string, ">=", trim: true)
         day_of_week = day_of_week_string_to_integer(day_of_week_string)
         on_or_after_day = String.to_integer(on_or_after_day)
         {:dow_equal_or_after_day, day_of_week, on_or_after_day}
+
       String.match?(day_string, ~r/[0-9]+/) ->
         {:day, String.to_integer(day_string)}
+
       true ->
         raise "could not parse day from rule (day to parse is \"#{day_string}\")"
     end
@@ -241,10 +260,25 @@ defmodule Tz.IanaFileParser do
       {:last_dow, day_of_week} ->
         day = day_at_last_given_day_of_week_of_month(year, month, day_of_week)
         {year, month, day}
+
       {:dow_equal_or_before_day, day_of_week, on_or_before_day} ->
-        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_before_day, on_or_before_day)
+        day_at_given_day_of_week_of_month(
+          year,
+          month,
+          day_of_week,
+          :on_or_before_day,
+          on_or_before_day
+        )
+
       {:dow_equal_or_after_day, day_of_week, on_or_after_day} ->
-        day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_after_day, on_or_after_day)
+        day_at_given_day_of_week_of_month(
+          year,
+          month,
+          day_of_week,
+          :on_or_after_day,
+          on_or_after_day
+        )
+
       {:day, day} ->
         {year, month, day}
     end
@@ -252,6 +286,7 @@ defmodule Tz.IanaFileParser do
 
   defp parse_to_field_string(:min), do: :min
   defp parse_to_field_string(:max), do: :max
+
   defp parse_to_field_string(to_field_string) do
     {year, month, day, hour, minute, second, time_modifier} =
       case String.split(to_field_string) do
@@ -263,6 +298,7 @@ defmodule Tz.IanaFileParser do
 
           {hour, minute, second, time_modifier} = parse_time_string(time)
           {year, month, day, hour, minute, second, time_modifier}
+
         [year, month, day] ->
           year = String.to_integer(year)
           month = month_string_to_integer(month)
@@ -270,22 +306,30 @@ defmodule Tz.IanaFileParser do
           {year, month, day} = parsed_day_to_date(year, month, parsed_day)
 
           {year, month, day, 0, 0, 0, :wall}
+
         [year, month] ->
           year = String.to_integer(year)
           month = month_string_to_integer(month)
 
           {year, month, 1, 0, 0, 0, :wall}
+
         [year] ->
           year = String.to_integer(year)
 
           {year, 1, 1, 0, 0, 0, :wall}
-       end
+      end
 
     naive_date_time = new_naive_date_time(year, month, day, hour, minute, second)
     {naive_date_time, time_modifier}
   end
 
-  defp day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_before_day, on_or_before_day) do
+  defp day_at_given_day_of_week_of_month(
+         year,
+         month,
+         day_of_week,
+         :on_or_before_day,
+         on_or_before_day
+       ) do
     {:ok, on_or_before_date} = Date.new(year, month, on_or_before_day)
 
     days_to_subtract = diff_days_of_week(day_of_week, Date.day_of_week(on_or_before_date))
@@ -294,7 +338,13 @@ defmodule Tz.IanaFileParser do
     {date.year, date.month, date.day}
   end
 
-  defp day_at_given_day_of_week_of_month(year, month, day_of_week, :on_or_after_day, on_or_after_day) do
+  defp day_at_given_day_of_week_of_month(
+         year,
+         month,
+         day_of_week,
+         :on_or_after_day,
+         on_or_after_day
+       ) do
     {:ok, on_or_after_date} = Date.new(year, month, on_or_after_day)
 
     days_to_add = diff_days_of_week(Date.day_of_week(on_or_after_date), day_of_week)
@@ -334,34 +384,54 @@ defmodule Tz.IanaFileParser do
   end
 
   defp month_string_to_integer(month_string) do
-    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    1 + Enum.find_index(month_names, &month_string == &1)
+    month_names = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ]
+
+    1 + Enum.find_index(month_names, &(month_string == &1))
   end
 
   defp day_of_week_string_to_integer(day_of_week_string) do
     day_of_week_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    1 + Enum.find_index(day_of_week_names, &day_of_week_string == &1)
+    1 + Enum.find_index(day_of_week_names, &(day_of_week_string == &1))
   end
 
   defp parse_time_string(time_string) do
     {hour, minute, second, time_modifier} =
       String.split(time_string, ~r{[:gsuz]}, include_captures: true, trim: true)
       |> case do
-         [hour, ":", minute, ":", second, time_modifier] when time_modifier in ["g", "u", "z"] ->
-           {hour, minute, second, :utc}
-         [hour, ":", minute, time_modifier] when time_modifier in ["g", "u", "z"] ->
-           {hour, minute, "0", :utc}
-         [hour, ":", minute, ":", second, time_modifier] when time_modifier == "s" ->
-           {hour, minute, second, :standard}
-         [hour, ":", minute, time_modifier] when time_modifier == "s" ->
-           {hour, minute, "0", :standard}
-         [hour, ":", minute, ":", second] ->
-           {hour, minute, second, :wall}
-         [hour, ":", minute] ->
-           {hour, minute, "0", :wall}
-         _ ->
-           raise "could not parse time string \"#{time_string}\""
-       end
+        [hour, ":", minute, ":", second, time_modifier] when time_modifier in ["g", "u", "z"] ->
+          {hour, minute, second, :utc}
+
+        [hour, ":", minute, time_modifier] when time_modifier in ["g", "u", "z"] ->
+          {hour, minute, "0", :utc}
+
+        [hour, ":", minute, ":", second, time_modifier] when time_modifier == "s" ->
+          {hour, minute, second, :standard}
+
+        [hour, ":", minute, time_modifier] when time_modifier == "s" ->
+          {hour, minute, "0", :standard}
+
+        [hour, ":", minute, ":", second] ->
+          {hour, minute, second, :wall}
+
+        [hour, ":", minute] ->
+          {hour, minute, "0", :wall}
+
+        _ ->
+          raise "could not parse time string \"#{time_string}\""
+      end
 
     hour = String.to_integer(hour)
     minute = String.to_integer(minute)
@@ -376,16 +446,22 @@ defmodule Tz.IanaFileParser do
       |> case do
         ["-", hours, ":", minutes, ":", seconds] ->
           {true, hours, minutes, seconds}
+
         ["-", hours, ":", minutes] ->
           {true, hours, minutes, "0"}
+
         [hours, ":", minutes, ":", seconds] ->
           {false, hours, minutes, seconds}
+
         [hours, ":", minutes] ->
           {false, hours, minutes, "0"}
+
         ["-", hours] ->
           {true, hours, "0", "0"}
+
         [hours] ->
           {false, hours, "0", "0"}
+
         _ ->
           raise "could not parse time string \"#{offset_string}\""
       end
@@ -403,30 +479,37 @@ defmodule Tz.IanaFileParser do
     zone_records
     |> Enum.group_by(& &1.name)
     |> (fn zones_by_name ->
-      Enum.map(zones_by_name, fn {zone_name, zone_lines} -> {zone_name, denormalize_zone_lines(zone_lines)} end)
-      |> Enum.into(%{})
-    end).()
+          Enum.map(zones_by_name, fn {zone_name, zone_lines} ->
+            {zone_name, denormalize_zone_lines(zone_lines)}
+          end)
+          |> Enum.into(%{})
+        end).()
   end
 
   def denormalized_rule_data(rule_records, build_dst_periods_until_year \\ 0) do
     rule_records
     |> Enum.group_by(& &1.name)
     |> (fn rules_by_name ->
-      rules_by_name
-      |> Enum.map(fn {rule_name, rules} -> {rule_name, denormalize_rules(rules, build_dst_periods_until_year)} end)
-      |> Enum.into(%{})
-    end).()
+          rules_by_name
+          |> Enum.map(fn {rule_name, rules} ->
+            {rule_name, denormalize_rules(rules, build_dst_periods_until_year)}
+          end)
+          |> Enum.into(%{})
+        end).()
   end
 
   defp denormalize_zone_lines(zone_lines) do
     zone_lines
     |> Enum.with_index()
     |> Enum.map(fn {zone_line, index} ->
-      Map.put(zone_line, :from,
+      Map.put(
+        zone_line,
+        :from,
         cond do
           index == 0 -> :min
           true -> Enum.at(zone_lines, index - 1).to
-        end)
+        end
+      )
     end)
   end
 
@@ -437,25 +520,28 @@ defmodule Tz.IanaFileParser do
       case ongoing_switch_rules do
         [] ->
           rules
-        [rule1, rule2] ->
-          last_year = Enum.max([
-            build_dst_periods_until_year,
-            elem(List.last(rules).from, 0).year,
-            elem(rule1.from, 0).year,
-            elem(rule2.from, 0).year
-          ])
 
-          Enum.filter(rules, & !&1.ongoing_switch)
-          ++ for year <- Range.new(elem(rule1.from, 0).year, last_year) do
-               change_rule_year(rule1, year)
-             end
-          ++ [change_rule_year(rule1, last_year + 1, true)]
-          ++ for year <- Range.new(elem(rule2.from, 0).year, last_year) do
-               change_rule_year(rule2, year)
-             end
-          ++ [change_rule_year(rule2, last_year + 1, true)]
+        [rule1, rule2] ->
+          last_year =
+            Enum.max([
+              build_dst_periods_until_year,
+              elem(List.last(rules).from, 0).year,
+              elem(rule1.from, 0).year,
+              elem(rule2.from, 0).year
+            ])
+
+          Enum.filter(rules, &(!&1.ongoing_switch)) ++
+            for year <- Range.new(elem(rule1.from, 0).year, last_year) do
+              change_rule_year(rule1, year)
+            end ++
+            [change_rule_year(rule1, last_year + 1, true)] ++
+            for year <- Range.new(elem(rule2.from, 0).year, last_year) do
+              change_rule_year(rule2, year)
+            end ++
+            [change_rule_year(rule2, last_year + 1, true)]
+
         _ ->
-          raise "unexpected number of rules to \"max\", rules: \"#{inspect rules}\""
+          raise "unexpected number of rules to \"max\", rules: \"#{inspect(rules)}\""
       end
 
     rules =
@@ -467,7 +553,7 @@ defmodule Tz.IanaFileParser do
 
         diff = NaiveDateTime.diff(naive_date_time1, naive_date_time2)
 
-        if (abs(diff) < 86400 && time_modifier1 != time_modifier2) do
+        if abs(diff) < 86400 && time_modifier1 != time_modifier2 do
           raise "unexpected case"
         end
 
@@ -478,15 +564,17 @@ defmodule Tz.IanaFileParser do
     |> Enum.with_index()
     |> Enum.map(fn {rule, index} ->
       rule
-      |> Map.put(:to,
-           if rule.ongoing_switch do
-             :max
-           else
-             case Enum.at(rules, index + 1, nil) do
-               nil -> :max
-               next_rule -> next_rule.from
-             end
-           end)
+      |> Map.put(
+        :to,
+        if rule.ongoing_switch do
+          :max
+        else
+          case Enum.at(rules, index + 1, nil) do
+            nil -> :max
+            next_rule -> next_rule.from
+          end
+        end
+      )
       |> Map.delete(:ongoing_switch)
     end)
   end

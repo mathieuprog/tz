@@ -17,10 +17,10 @@ defmodule Tz.CompilerRunner do
     Keyword.drop(all_env, known_env_keys)
     |> Keyword.keys()
 
-  if (unknown_env_keys != []) do
+  if unknown_env_keys != [] do
     joined_known_env_keys =
       known_env_keys
-      |> Enum.map(& ":#{to_string(&1)}")
+      |> Enum.map(&":#{to_string(&1)}")
       |> Enum.join(", ")
 
     raise "possible options are #{joined_known_env_keys}"
@@ -35,7 +35,7 @@ defmodule Tz.CompilerRunner do
 
   if forced_iana_version && !data_dir do
     raise "when setting a specific IANA version to use, " <>
-      "the files must be stored in a custom directory via the :data_dir configuration"
+            "the files must be stored in a custom directory via the :data_dir configuration"
   end
 
   require Tz.Compiler

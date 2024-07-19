@@ -31,7 +31,8 @@ defmodule Tz.TimeZoneDatabase do
         periods = generate_dynamic_periods(secs, utc_offset, rules_and_template)
         do_find_period_for_secs(secs, periods, time_modifier)
 
-      result -> result
+      result ->
+        result
     end
   end
 
@@ -55,7 +56,11 @@ defmodule Tz.TimeZoneDatabase do
   # and the list of transitions
   defp find_period_for_wall_secs(_, [{0, period, _, _}]), do: {:ok, period_to_map(period)}
 
-  defp find_period_for_wall_secs(secs, [{utc_secs, period = {utc_off, std_off, _}, prev_period = {prev_utc_off, prev_std_off, _}, rules_and_template} | tail]) do
+  defp find_period_for_wall_secs(secs, [
+         {utc_secs, period = {utc_off, std_off, _}, prev_period = {prev_utc_off, prev_std_off, _},
+          rules_and_template}
+         | tail
+       ]) do
     # utc_secs + utc_off + std_off = wall gregorian seconds
     if secs < utc_secs + utc_off + std_off do
       # the given timestamp occurs in a gap if it occurs between
@@ -63,8 +68,10 @@ defmodule Tz.TimeZoneDatabase do
       # the utc timestamp + the offset (= this transition's wall time)
       if secs >= utc_secs + prev_utc_off + prev_std_off do
         {:gap,
-          {period_to_map(prev_period), gregorian_seconds_to_naive_datetime(utc_secs + prev_utc_off + prev_std_off)},
-          {period_to_map(period), gregorian_seconds_to_naive_datetime(utc_secs + utc_off + std_off)}}
+         {period_to_map(prev_period),
+          gregorian_seconds_to_naive_datetime(utc_secs + prev_utc_off + prev_std_off)},
+         {period_to_map(period),
+          gregorian_seconds_to_naive_datetime(utc_secs + utc_off + std_off)}}
       else
         # the given timestamp occurs before this transition and there is no gap with the previous period,
         # so continue iterating
@@ -81,6 +88,7 @@ defmodule Tz.TimeZoneDatabase do
         case rules_and_template do
           nil ->
             {:ok, period_to_map(period)}
+
           _ ->
             {:max, utc_off, rules_and_template}
         end
@@ -101,12 +109,13 @@ defmodule Tz.TimeZoneDatabase do
 
     [rule1, rule2] = Tz.OngoingChangingRulesProvider.rules(rule_name)
 
-    rule_records = Tz.IanaFileParser.denormalized_rule_data([
-      Tz.IanaFileParser.change_rule_year(rule2, year - 1),
-      Tz.IanaFileParser.change_rule_year(rule1, year - 1),
-      Tz.IanaFileParser.change_rule_year(rule2, year),
-      Tz.IanaFileParser.change_rule_year(rule1, year)
-    ])
+    rule_records =
+      Tz.IanaFileParser.denormalized_rule_data([
+        Tz.IanaFileParser.change_rule_year(rule2, year - 1),
+        Tz.IanaFileParser.change_rule_year(rule1, year - 1),
+        Tz.IanaFileParser.change_rule_year(rule2, year),
+        Tz.IanaFileParser.change_rule_year(rule1, year)
+      ])
 
     zone_line = %{
       from: :min,
@@ -124,7 +133,8 @@ defmodule Tz.TimeZoneDatabase do
     div(days * 86_400_000_000 + parts_in_day, 1_000_000)
   end
 
-  defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO, year: year}) when year < 0, do: 0
+  defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO, year: year}) when year < 0,
+    do: 0
 
   defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO} = datetime) do
     NaiveDateTime.to_erl(datetime)

@@ -8,14 +8,16 @@ defmodule Tz.IanaDataDir do
   def forced_iana_version(), do: Application.get_env(:tz, :iana_version)
 
   defp latest_dir_name([]), do: nil
+
   defp latest_dir_name(dir_names) do
     Enum.max(dir_names)
   end
 
   defp relevant_dir_name([]), do: nil
+
   defp relevant_dir_name(dir_names) do
     if forced_version = forced_iana_version() do
-      Enum.find(dir_names, & &1 == "tzdata#{forced_version}")
+      Enum.find(dir_names, &(&1 == "tzdata#{forced_version}"))
     else
       latest_dir_name(dir_names)
     end
@@ -75,15 +77,27 @@ defmodule Tz.IanaDataDir do
 
         cond do
           lib_dir_name = relevant_dir_name(lib_dir_names) ->
-            File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
-            Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
+            File.cp_r!(
+              Path.join(:code.priv_dir(:tz), lib_dir_name),
+              Path.join(dir(), lib_dir_name)
+            )
+
+            Logger.info(
+              "Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}"
+            )
 
           lib_dir_name = latest_dir_name(lib_dir_names) ->
             app_dir_name = latest_tzdata_dir_name()
 
             if !app_dir_name || app_dir_name < lib_dir_name do
-              File.cp_r!(Path.join(:code.priv_dir(:tz), lib_dir_name), Path.join(dir(), lib_dir_name))
-              Logger.info("Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}")
+              File.cp_r!(
+                Path.join(:code.priv_dir(:tz), lib_dir_name),
+                Path.join(dir(), lib_dir_name)
+              )
+
+              Logger.info(
+                "Moved #{Path.join(:code.priv_dir(:tz), lib_dir_name)} to #{Path.join(dir(), lib_dir_name)}"
+              )
             end
 
           true ->
@@ -98,24 +112,25 @@ defmodule Tz.IanaDataDir do
     :ok = File.write!(tmp_archive_path, content)
 
     files_to_extract = [
-      'africa',
-      'antarctica',
-      'asia',
-      'australasia',
-      'backward',
-      'etcetera',
-      'europe',
-      'northamerica',
-      'southamerica',
-      'iso3166.tab',
-      'zone1970.tab'
+      ~c"africa",
+      ~c"antarctica",
+      ~c"asia",
+      ~c"australasia",
+      ~c"backward",
+      ~c"etcetera",
+      ~c"europe",
+      ~c"northamerica",
+      ~c"southamerica",
+      ~c"iso3166.tab",
+      ~c"zone1970.tab"
     ]
 
-    :ok = :erl_tar.extract(tmp_archive_path, [
-      :compressed,
-      {:cwd, Path.join(dir, tzdata_dir_name) |> String.to_charlist()},
-      {:files, files_to_extract}
-    ])
+    :ok =
+      :erl_tar.extract(tmp_archive_path, [
+        :compressed,
+        {:cwd, Path.join(dir, tzdata_dir_name) |> String.to_charlist()},
+        {:files, files_to_extract}
+      ])
 
     :ok = File.rm!(tmp_archive_path)
 
