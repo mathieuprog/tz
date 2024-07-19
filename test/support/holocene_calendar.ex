@@ -149,15 +149,32 @@ defmodule Support.HoloceneCalendar do
   @impl true
   defdelegate valid_time?(hour, minute, second, microsecond), to: Calendar.ISO
 
-  if Code.ensure_loaded?(Calendar.ISO) &&
-       function_exported?(Calendar.ISO, :iso_days_to_beginning_of_day, 1) do
-    @impl true
-    defdelegate iso_days_to_beginning_of_day(date), to: Calendar.ISO
-  end
+  if Code.ensure_loaded?(Calendar.ISO) do
+    if function_exported?(Calendar.ISO, :shift_date, 4) do
+      @impl true
+      defdelegate shift_date(year, month, day, t), to: Calendar.ISO
+    end
 
-  if Code.ensure_loaded?(Calendar.ISO) &&
-       function_exported?(Calendar.ISO, :iso_days_to_end_of_day, 1) do
-    @impl true
-    defdelegate iso_days_to_end_of_day(date), to: Calendar.ISO
+    if function_exported?(Calendar.ISO, :shift_time, 5) do
+      @impl true
+      defdelegate shift_time(hour, minute, second, microsecond, t),
+        to: Calendar.ISO
+    end
+
+    if function_exported?(Calendar.ISO, :shift_naive_datetime, 8) do
+      @impl true
+      defdelegate shift_naive_datetime(year, month, day, hour, minute, second, microsecond, t),
+        to: Calendar.ISO
+    end
+
+    if function_exported?(Calendar.ISO, :iso_days_to_beginning_of_day, 1) do
+      @impl true
+      defdelegate iso_days_to_beginning_of_day(date), to: Calendar.ISO
+    end
+
+    if function_exported?(Calendar.ISO, :iso_days_to_end_of_day, 1) do
+      @impl true
+      defdelegate iso_days_to_end_of_day(date), to: Calendar.ISO
+    end
   end
 end
