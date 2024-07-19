@@ -31,9 +31,9 @@ defmodule Tz.MixProject do
   defp deps do
     [
       {:castore, "~> 0.1 or ~> 1.0", optional: true},
-      {:mint, "~> 1.5", optional: true},
-      {:ex_doc, "~> 0.29", only: :dev},
-      {:benchee, "~> 1.1", only: :dev}
+      {:mint, "~> 1.6", optional: true},
+      {:ex_doc, "~> 0.34", only: :dev},
+      {:benchee, "~> 1.3", only: :dev}
     ]
   end
 
