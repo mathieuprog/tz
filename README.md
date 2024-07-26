@@ -192,9 +192,9 @@ Lastly, add the http client `mint` and ssl certificate store `castore` into your
 ```elixir
 defp deps do
   [
-    {:castore, "~> 0.1"},
-    {:mint, "~> 1.4"},
-    {:tz, "~> 0.26.6"}
+    {:castore, "~> 1.0"},
+    {:mint, "~> 1.6"},
+    {:tz, "~> 0.26"}
   ]
 end
 ```
