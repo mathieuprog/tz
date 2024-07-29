@@ -131,6 +131,36 @@ defmodule Tz.Compiler do
         def iana_version() do
           unquote(tzdata_version)
         end
+
+        def compiled_at() do
+          unquote(Macro.escape(DateTime.utc_now()))
+        end
+
+        def next_period(%DateTime{} = datetime) do
+          {gregorian_secs, _} = DateTime.to_gregorian_seconds(datetime)
+
+          {:ok, periods} = periods(datetime.time_zone)
+          reversed_periods = Enum.reverse(periods)
+
+          period = Enum.find(reversed_periods, fn {from, _, _, _} -> gregorian_secs < from end)
+
+          if period do
+            period
+          else
+            {utc_secs, {utc_to_std_offset, _, _}, _, rules_and_template} = hd(periods)
+
+            periods =
+              Tz.TimeZoneDatabase.generate_dynamic_periods(
+                utc_secs,
+                utc_to_std_offset,
+                rules_and_template
+              )
+
+            reversed_periods = Enum.reverse(periods)
+
+            Enum.find(reversed_periods, fn {from, _, _, _} -> gregorian_secs < from end)
+          end
+        end
       end,
       for period_or_link <- periods_and_links do
         case period_or_link do

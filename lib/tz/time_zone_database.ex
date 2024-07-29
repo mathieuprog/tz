@@ -104,7 +104,8 @@ defmodule Tz.TimeZoneDatabase do
     }
   end
 
-  defp generate_dynamic_periods(secs, utc_offset, {rule_name, format_time_zone_abbr}) do
+  @doc false
+  def generate_dynamic_periods(secs, utc_offset, {rule_name, format_time_zone_abbr}) do
     %{year: year} = gregorian_seconds_to_naive_datetime(secs)
 
     [rule1, rule2] = Tz.OngoingChangingRulesProvider.rules(rule_name)
@@ -114,7 +115,9 @@ defmodule Tz.TimeZoneDatabase do
         Tz.IanaFileParser.change_rule_year(rule2, year - 1),
         Tz.IanaFileParser.change_rule_year(rule1, year - 1),
         Tz.IanaFileParser.change_rule_year(rule2, year),
-        Tz.IanaFileParser.change_rule_year(rule1, year)
+        Tz.IanaFileParser.change_rule_year(rule1, year),
+        Tz.IanaFileParser.change_rule_year(rule2, year + 1),
+        Tz.IanaFileParser.change_rule_year(rule1, year + 1)
       ])
 
     zone_line = %{

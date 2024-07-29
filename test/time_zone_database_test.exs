@@ -170,4 +170,42 @@ defmodule TimeZoneDatabaseTest do
 
     assert DateTime.to_iso8601(datetime) == "2030-01-01T00:00:00+00:00"
   end
+
+  test "next_period/1 and previous_period/1" do
+    {:ok, dt} =
+      DateTime.new(~D[2030-09-01], ~T[10:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
+
+    {from, _, _, _} = Tz.PeriodsProvider.next_period(dt)
+
+    datetime_next_period =
+      DateTime.from_gregorian_seconds(from)
+      |> DateTime.shift_zone!(dt.time_zone, Tz.TimeZoneDatabase)
+
+    {:ambiguous, first_dt, second_dt} =
+      DateTime.new(~D[2030-10-27], ~T[02:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
+
+    assert DateTime.compare(datetime_next_period, second_dt) == :eq
+
+    {from, _, _, _} = Tz.PeriodsProvider.next_period(second_dt)
+
+    datetime_next_period =
+      DateTime.from_gregorian_seconds(from)
+      |> DateTime.shift_zone!(dt.time_zone, Tz.TimeZoneDatabase)
+
+    {:gap, _dt_just_before, dt_just_after} =
+      DateTime.new(~D[2031-03-30], ~T[02:30:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
+
+    assert DateTime.compare(datetime_next_period, dt_just_after) == :eq
+
+    {from, _, _, _} = Tz.PeriodsProvider.next_period(first_dt)
+
+    datetime_next_period =
+      DateTime.from_gregorian_seconds(from)
+      |> DateTime.shift_zone!(dt.time_zone, Tz.TimeZoneDatabase)
+
+    {:ambiguous, _first_dt, second_dt} =
+      DateTime.new(~D[2030-10-27], ~T[02:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
+
+    assert DateTime.compare(datetime_next_period, second_dt) == :eq
+  end
 end
