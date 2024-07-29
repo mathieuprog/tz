@@ -171,7 +171,7 @@ defmodule TimeZoneDatabaseTest do
     assert DateTime.to_iso8601(datetime) == "2030-01-01T00:00:00+00:00"
   end
 
-  test "next_period/1 and previous_period/1" do
+  test "next_period/1" do
     {:ok, dt} =
       DateTime.new(~D[2030-09-01], ~T[10:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
 
