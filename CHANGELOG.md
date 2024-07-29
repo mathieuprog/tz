@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.27.x
+
+* Add `Tz.PeriodsProvider.next_period/1`.
+
 ## 0.26.x
 
 * Add `:iana_version` config.
