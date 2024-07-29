@@ -207,5 +207,10 @@ defmodule TimeZoneDatabaseTest do
       DateTime.new(~D[2030-10-27], ~T[02:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
 
     assert DateTime.compare(datetime_next_period, second_dt) == :eq
+
+    {:ok, dt} =
+      DateTime.new(~D[2030-09-01], ~T[10:00:00], "Asia/Manila", Tz.TimeZoneDatabase)
+
+    assert Tz.PeriodsProvider.next_period(dt) == nil
   end
 end

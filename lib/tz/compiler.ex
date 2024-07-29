@@ -147,18 +147,22 @@ defmodule Tz.Compiler do
           if period do
             period
           else
-            {utc_secs, {utc_to_std_offset, _, _}, _, rules_and_template} = hd(periods)
+            case hd(periods) do
+              {_, _, _, nil} ->
+                nil
 
-            periods =
-              Tz.TimeZoneDatabase.generate_dynamic_periods(
-                utc_secs,
-                utc_to_std_offset,
-                rules_and_template
-              )
+              {utc_secs, {utc_to_std_offset, _, _}, _, rules_and_template} ->
+                periods =
+                  Tz.TimeZoneDatabase.generate_dynamic_periods(
+                    utc_secs,
+                    utc_to_std_offset,
+                    rules_and_template
+                  )
 
-            reversed_periods = Enum.reverse(periods)
+                reversed_periods = Enum.reverse(periods)
 
-            Enum.find(reversed_periods, fn {from, _, _, _} -> gregorian_secs < from end)
+                Enum.find(reversed_periods, fn {from, _, _, _} -> gregorian_secs < from end)
+            end
           end
         end
       end,
