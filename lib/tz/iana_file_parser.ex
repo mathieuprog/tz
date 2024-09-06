@@ -383,7 +383,7 @@ defmodule Tz.IanaFileParser do
     {String.to_integer(from_year), String.to_integer(to_year)}
   end
 
-  def month_string_to_integer(month_string) do
+  defp month_string_to_integer(month_string) do
     month_names = [
       {"Jan", "January"},
       {"Feb", "February"},
