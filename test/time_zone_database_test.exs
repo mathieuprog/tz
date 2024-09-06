@@ -213,4 +213,11 @@ defmodule TimeZoneDatabaseTest do
 
     assert Tz.PeriodsProvider.next_period(dt) == nil
   end
+
+  test "zone_abbr parameter" do
+    ndt = ~N"2015-01-13 19:00:07"
+    dt = DateTime.from_naive!(ndt, "Etc/UTC")
+    dt = DateTime.shift_zone!(dt, "Etc/GMT+12", Tz.TimeZoneDatabase)
+    assert dt.zone_abbr == "-12"
+  end
 end
