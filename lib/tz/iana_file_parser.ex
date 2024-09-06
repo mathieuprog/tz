@@ -383,23 +383,28 @@ defmodule Tz.IanaFileParser do
     {String.to_integer(from_year), String.to_integer(to_year)}
   end
 
-  defp month_string_to_integer(month_string) do
+  def month_string_to_integer(month_string) do
     month_names = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec"
+      {"Jan", "January"},
+      {"Feb", "February"},
+      {"Mar", "March"},
+      {"Apr", "April"},
+      {"May", "May"},
+      {"Jun", "June"},
+      {"Jul", "July"},
+      {"Aug", "August"},
+      {"Sep", "September"},
+      {"Oct", "October"},
+      {"Nov", "November"},
+      {"Dec", "December"}
     ]
 
-    1 + Enum.find_index(month_names, &(month_string == &1))
+    index =
+      Enum.find_index(month_names, fn {abbr, full} ->
+        month_string == abbr || month_string == full
+      end)
+
+    1 + index
   end
 
   defp day_of_week_string_to_integer(day_of_week_string) do
