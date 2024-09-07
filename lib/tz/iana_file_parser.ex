@@ -408,8 +408,22 @@ defmodule Tz.IanaFileParser do
   end
 
   defp day_of_week_string_to_integer(day_of_week_string) do
-    day_of_week_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    1 + Enum.find_index(day_of_week_names, &(day_of_week_string == &1))
+    day_of_week_names = [
+      {"Mon", "Monday"},
+      {"Tue", "Tuesday"},
+      {"Wed", "Wednesday"},
+      {"Thu", "Thursday"},
+      {"Fri", "Friday"},
+      {"Sat", "Saturday"},
+      {"Sun", "Sunday"}
+    ]
+
+    index =
+      Enum.find_index(day_of_week_names, fn {abbr, full} ->
+        day_of_week_string == abbr || day_of_week_string == full
+      end)
+
+    1 + index
   end
 
   defp parse_time_string(time_string) do
