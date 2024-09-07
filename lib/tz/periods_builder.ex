@@ -339,32 +339,39 @@ defmodule Tz.PeriodsBuilder do
   defp zone_abbr(zone_line, offset, letter \\ "") do
     is_standard_time = offset == 0
 
-    cond do
-      String.contains?(zone_line.format_time_zone_abbr, "/") ->
-        [zone_abbr_std_time, zone_abbr_dst_time] =
-          String.split(zone_line.format_time_zone_abbr, "/")
+    zone_abbr =
+      cond do
+        String.contains?(zone_line.format_time_zone_abbr, "/") ->
+          [zone_abbr_std_time, zone_abbr_dst_time] =
+            String.split(zone_line.format_time_zone_abbr, "/")
 
-        if(is_standard_time, do: zone_abbr_std_time, else: zone_abbr_dst_time)
+          if(is_standard_time, do: zone_abbr_std_time, else: zone_abbr_dst_time)
 
-      String.contains?(zone_line.format_time_zone_abbr, "%z") ->
-        total_seconds = zone_line.std_offset_from_utc_time + offset
-        hours = div(total_seconds, 3600)
-        minutes = rem(abs(total_seconds), 3600) |> div(60)
+        String.contains?(zone_line.format_time_zone_abbr, "%z") ->
+          total_seconds = zone_line.std_offset_from_utc_time + offset
+          hours = div(total_seconds, 3600)
+          minutes = rem(abs(total_seconds), 3600) |> div(60)
 
-        sign = if hours >= 0, do: "+", else: "-"
+          sign = if hours >= 0, do: "+", else: "-"
 
-        if minutes > 0 do
-          "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}:#{abs(minutes) |> to_string() |> String.pad_leading(2, "0")}"
-        else
-          "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}"
-        end
+          if minutes > 0 do
+            "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}#{abs(minutes) |> to_string() |> String.pad_leading(2, "0")}"
+          else
+            "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}"
+          end
 
-      String.contains?(zone_line.format_time_zone_abbr, "%s") ->
-        String.replace(zone_line.format_time_zone_abbr, "%s", letter)
+        String.contains?(zone_line.format_time_zone_abbr, "%s") ->
+          String.replace(zone_line.format_time_zone_abbr, "%s", letter)
 
-      true ->
-        zone_line.format_time_zone_abbr
+        true ->
+          zone_line.format_time_zone_abbr
+      end
+
+    unless String.length(zone_abbr) >= 3 and Regex.match?(~r/^[A-Za-z0-9\+\-]+$/, zone_abbr) do
+      raise "invalid time zone abbreviation #{zone_abbr} for #{zone_line.name}"
     end
+
+    zone_abbr
   end
 
   defp add_to_and_convert_date_tuple(
