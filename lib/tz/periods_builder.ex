@@ -346,6 +346,19 @@ defmodule Tz.PeriodsBuilder do
 
         if(is_standard_time, do: zone_abbr_std_time, else: zone_abbr_dst_time)
 
+      String.contains?(zone_line.format_time_zone_abbr, "%z") ->
+        total_seconds = zone_line.std_offset_from_utc_time + offset
+        hours = div(total_seconds, 3600)
+        minutes = rem(abs(total_seconds), 3600) |> div(60)
+
+        sign = if hours >= 0, do: "+", else: "-"
+
+        if minutes > 0 do
+          "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}:#{abs(minutes) |> to_string() |> String.pad_leading(2, "0")}"
+        else
+          "#{sign}#{abs(hours) |> to_string() |> String.pad_leading(2, "0")}"
+        end
+
       String.contains?(zone_line.format_time_zone_abbr, "%s") ->
         String.replace(zone_line.format_time_zone_abbr, "%s", letter)
 
