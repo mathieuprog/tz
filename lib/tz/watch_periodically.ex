@@ -53,9 +53,14 @@ defmodule Tz.WatchPeriodically do
 
   @doc false
   def init(opts) do
+    {:ok, %{opts: opts}, {:continue, :work}}
+  end
+
+  @doc false
+  def handle_continue(:work, %{opts: opts}) do
     watch(opts[:on_update])
     schedule_work(opts[:interval_in_days])
-    {:ok, %{opts: opts}}
+    {:noreply, %{opts: opts}}
   end
 
   @doc false
