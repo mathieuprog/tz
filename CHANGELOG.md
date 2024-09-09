@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.28.x
+
+* Ensure periodic updater and watcher don't crash the app on GenServer init.
+
 ## 0.27.x
 
 * Add `Tz.PeriodsProvider.next_period/1`.
