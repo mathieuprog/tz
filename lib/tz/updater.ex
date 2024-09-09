@@ -42,6 +42,10 @@ defmodule Tz.Updater do
       {:ok, latest_version} ->
         if latest_version != latest_version_saved &&
              latest_version != PeriodsProvider.iana_version() do
+          Logger.info(
+            "New IANA time zone data version #{latest_version} available; currently using #{latest_version_saved}."
+          )
+
           case update_tz_database(latest_version) do
             {:ok, _dir} ->
               IanaDataDir.delete_tzdata_dir(latest_version_saved)
@@ -51,6 +55,10 @@ defmodule Tz.Updater do
               {:error, latest_version_saved}
           end
         else
+          Logger.info(
+            "Already using the latest IANA time zone data version: #{PeriodsProvider.iana_version()}."
+          )
+
           {:already_latest, latest_version}
         end
 
@@ -68,7 +76,6 @@ defmodule Tz.Updater do
     case HTTP.get_http_client!().request("data.iana.org", "/time-zones/tzdb/version") do
       %HTTPResponse{body: body, status_code: 200} ->
         version = body |> String.trim()
-        Logger.info("Latest version of the IANA time zone data is #{version}")
         {:ok, version}
 
       _ ->

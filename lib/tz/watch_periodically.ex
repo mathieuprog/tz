@@ -37,6 +37,10 @@ defmodule Tz.WatchPeriodically do
           )
 
           on_update_callback && on_update_callback.(latest_version)
+        else
+          Logger.info(
+            "Already using the latest IANA time zone data version: #{PeriodsProvider.iana_version()}."
+          )
         end
 
       :error ->
