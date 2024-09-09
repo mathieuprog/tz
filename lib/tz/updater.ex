@@ -19,10 +19,19 @@ defmodule Tz.Updater do
       end
 
       Logger.info("Tz is recompiling the time zone periods...")
-      Code.compiler_options(ignore_module_conflict: true)
-      Compiler.compile()
-      Code.compiler_options(ignore_module_conflict: false)
-      Logger.info("Tz compilation done")
+
+      try do
+        Code.compiler_options(ignore_module_conflict: true)
+        Compiler.compile()
+        Code.compiler_options(ignore_module_conflict: false)
+        Logger.info("Tz compilation done")
+      rescue
+        e ->
+          Logger.error("""
+          Failed to recompile IANA time zone data to version #{latest_tz_version}, remaining on current version #{PeriodsProvider.iana_version()}.
+          Error: #{Exception.format(:error, e, __STACKTRACE__)}
+          """)
+      end
     end
   end
 
