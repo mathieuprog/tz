@@ -132,8 +132,9 @@ defmodule Tz.TimeZoneDatabase do
     |> Tz.PeriodsBuilder.periods_to_tuples_and_reverse()
   end
 
-  defp iso_days_to_gregorian_seconds({days, {parts_in_day, 86_400_000_000}}) do
-    div(days * 86_400_000_000 + parts_in_day, 1_000_000)
+  defp iso_days_to_gregorian_seconds({days, {parts_in_day, unit_in_day}}) do
+    units_per_second = div(unit_in_day, 86_400)
+    div(days * unit_in_day + parts_in_day, units_per_second)
   end
 
   defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO, year: year}) when year < 0,
