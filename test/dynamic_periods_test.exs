@@ -1,5 +1,5 @@
 defmodule DynamicPeriodsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "dynamic periods" do
     time_zone = "Antarctica/Troll"
