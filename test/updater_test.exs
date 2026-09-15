@@ -1,6 +1,7 @@
 defmodule UpdaterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
+  @tag :updater
   test "updater is only started once" do
     assert {:ok, _} = start_supervised(Tz.UpdatePeriodically)
     assert {:error, _} = start_supervised(Tz.UpdatePeriodically)
