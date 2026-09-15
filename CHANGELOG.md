@@ -2,6 +2,9 @@
 
 ## 0.28.x
 
+* Update bundled IANA time zone data to tzdata2026d.
+* Fix incorrect offsets and spurious gaps when `:build_dst_periods_until_year`
+  is earlier than a finite time zone boundary.
 * Ensure periodic updater and watcher don't crash the app on GenServer init.
 
 ## 0.27.x

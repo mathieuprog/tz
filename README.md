@@ -8,7 +8,7 @@ module can, by default, only operate on datetimes in the UTC time zone. Alternat
 third-party libraries, such as `tz`, to bring in time zone support and deal with datetimes in other time zones than UTC.
 
 The `tz` library relies on the [time zone database](https://data.iana.org/time-zones/tzdb/) maintained by
-[IANA](https://www.iana.org). As of version 0.28.3, `tz` uses version **tzdata2026b** of the IANA time zone database.
+[IANA](https://www.iana.org). As of version 0.28.4, `tz` uses version **tzdata2026d** of the IANA time zone database.
 
 * [Installation and usage](#installation-and-usage)
 * [Core principles](#core-principles)
@@ -284,7 +284,7 @@ config :tz, :data_dir, Path.join(Path.dirname(__DIR__), "priv")
 ## Get the IANA time zone database version
 
 ```elixir
-Tz.iana_version() == "2023c"
+Tz.iana_version() == "2026d"
 ```
 
 ## Time zone utility functions
