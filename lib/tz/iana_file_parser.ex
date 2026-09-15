@@ -21,9 +21,17 @@ defmodule Tz.IanaFileParser do
     rules = Enum.filter(records, &(&1.record_type == :rule))
     links = Enum.filter(records, &(&1.record_type == :link))
 
+    # Keep recurring-rule lookahead beyond finite zone boundaries, even when
+    # rule dates and zone boundaries fall in different years.
+    build_dst_periods_until_year =
+      Enum.reduce(zones, @build_dst_periods_until_year, fn
+        %{to: :max}, year -> year
+        %{to: {until, _}}, year -> max(year, until.year + 1)
+      end)
+
     {
       denormalized_zone_data(zones),
-      denormalized_rule_data(rules, @build_dst_periods_until_year),
+      denormalized_rule_data(rules, build_dst_periods_until_year),
       links,
       Enum.filter(rules, & &1.ongoing_switch)
       |> Enum.group_by(& &1.name)
