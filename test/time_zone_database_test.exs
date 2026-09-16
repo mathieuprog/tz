@@ -171,6 +171,13 @@ defmodule TimeZoneDatabaseTest do
     assert DateTime.to_iso8601(datetime) == "2030-01-01T00:00:00+00:00"
   end
 
+  test "supports nanoseconds precision" do
+    date_time_utc = ~U[2029-12-31 10:15:00.000000Z]
+
+    assert ~U[2029-12-31 10:15:00.000001Z] ==
+             DateTime.add(date_time_utc, 1_000, :nanosecond, Tz.TimeZoneDatabase)
+  end
+
   test "next_period/1" do
     {:ok, dt} =
       DateTime.new(~D[2030-09-01], ~T[10:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
