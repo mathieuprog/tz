@@ -261,6 +261,8 @@ Note that increasing the year will also slightly increase compilation time, as i
 
 The default setting computes periods for a period of 5 years from the time the code is compiled. Note that if you have added the automatic updater, the periods will be recomputed with every update, which occurs multiple times throughout the year.
 
+For reproducible builds, set `SOURCE_DATE_EPOCH` (see [reproducible-builds.org](https://reproducible-builds.org/specs/source-date-epoch/)) to the Unix time the build should be stamped with: both the default year above and `Tz.PeriodsProvider.compiled_at/0` then come from it rather than from the clock, so two builds of the same sources produce the same bytes.
+
 ### Rejecting old time zone periods
 
 You can slightly decrease **memory usage** and **compilation time**, by rejecting time zone periods before a given year:

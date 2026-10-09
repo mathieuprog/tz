@@ -2,6 +2,8 @@
 
 ## 0.28.x
 
+* Honour `SOURCE_DATE_EPOCH` for `Tz.PeriodsProvider.compiled_at/0` and the default
+  `:build_dst_periods_until_year`, so that reproducible builds get the same bytes.
 * Update bundled IANA time zone data to tzdata2026d.
 * Fix incorrect offsets and spurious gaps when `:build_dst_periods_until_year`
   is earlier than a finite time zone boundary.
