@@ -129,7 +129,7 @@ defmodule Tz.Compiler do
         end
 
         def compiled_at() do
-          unquote(Macro.escape(DateTime.utc_now()))
+          unquote(Macro.escape(Tz.BuildTime.utc_now()))
         end
 
         def next_period(%DateTime{} = datetime) do

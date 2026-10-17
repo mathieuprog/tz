@@ -5,7 +5,7 @@ defmodule Tz.IanaFileParser do
   @build_dst_periods_until_year Application.compile_env(
                                   :tz,
                                   :build_dst_periods_until_year,
-                                  5 + NaiveDateTime.utc_now().year
+                                  5 + Tz.BuildTime.utc_now().year
                                 )
 
   def parse(file_path) do
