@@ -306,7 +306,7 @@ around time zones are provided by [TzExtra](https://github.com/mathieuprog/tz_ex
 ### Based on IANA time zone data
 
 * [time_zone_info](https://github.com/hrzndhrn/time_zone_info)
-* [tzdata](https://github.com/lau/tzdata) (not recommended due to bugs)
+* [tzdata](https://github.com/lau/tzdata)
 
 ### Based on OS-supplied zoneinfo files
 
