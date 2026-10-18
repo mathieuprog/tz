@@ -136,6 +136,10 @@ defmodule Tz.TimeZoneDatabase do
     div(days * 86_400_000_000 + parts_in_day, 1_000_000)
   end
 
+  defp iso_days_to_gregorian_seconds({days, {parts_in_day, parts_per_day}}) do
+    div(days * parts_per_day + parts_in_day, div(parts_per_day, 86400))
+  end
+
   defp naive_datetime_to_gregorian_seconds(%{calendar: Calendar.ISO, year: year}) when year < 0,
     do: 0
 
