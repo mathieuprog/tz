@@ -144,7 +144,7 @@ defmodule Tz.PeriodsBuilder do
           rule_from =
             convert_date_tuple(
               rule.from,
-              prev_period.std_offset_from_utc_time,
+              zone_line.std_offset_from_utc_time,
               prev_local_offset_from_std_time
             )
 
@@ -157,7 +157,7 @@ defmodule Tz.PeriodsBuilder do
           rule_from =
             convert_date_tuple(
               rule.from,
-              prev_period.std_offset_from_utc_time,
+              zone_line.std_offset_from_utc_time,
               prev_local_offset_from_std_time
             )
 

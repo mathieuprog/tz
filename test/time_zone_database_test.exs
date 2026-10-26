@@ -171,6 +171,26 @@ defmodule TimeZoneDatabaseTest do
     assert DateTime.to_iso8601(datetime) == "2030-01-01T00:00:00+00:00"
   end
 
+  test "zone line ending at the moment of a rule transition" do
+    # America/Scoresbysund changed from -1:00 EU to -2:00 EU on 2024-03-31 at
+    # 00:00 local time (01:00 UTC), when EU summer time started: the offset
+    # stays -01 throughout
+    time_zone = "America/Scoresbysund"
+
+    datetime = DateTime.shift_zone!(~U[2024-03-31 00:30:00Z], time_zone, Tz.TimeZoneDatabase)
+    assert DateTime.to_iso8601(datetime) == "2024-03-30T23:30:00-01:00"
+    assert datetime.std_offset == 0
+
+    datetime = DateTime.shift_zone!(~U[2024-03-31 01:00:00Z], time_zone, Tz.TimeZoneDatabase)
+    assert DateTime.to_iso8601(datetime) == "2024-03-31T00:00:00-01:00"
+    assert datetime.std_offset == 3600
+
+    assert {:ok, datetime} =
+             DateTime.from_naive(~N[2024-03-30 23:30:00], time_zone, Tz.TimeZoneDatabase)
+
+    assert DateTime.to_iso8601(datetime) == "2024-03-30T23:30:00-01:00"
+  end
+
   test "next_period/1" do
     {:ok, dt} =
       DateTime.new(~D[2030-09-01], ~T[10:00:00], "Europe/Copenhagen", Tz.TimeZoneDatabase)
